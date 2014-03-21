@@ -145,6 +145,7 @@ class Sample(LabeledModel, TimestampedModel):
     # no guarantee that this sample has been ranked or that it even has
     # phenotype data, we allow this field to be null.
     phenotype_modified = models.DateTimeField(null=True, blank=True)
+    variants = models.ManyToManyField(Variant, through='Result')
 
     class Meta(LabeledModel.Meta):
         db_table = 'sample'

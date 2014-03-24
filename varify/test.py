@@ -7,7 +7,6 @@ from varify.samples.models import Sample
 from varify.samples.models import Result
 
 
-selectedVariants = Sample.objects.get(id=1)
-selectedVariants.variants.all()
-
-print selectedVariants.variants.all()
+selectedSamples = Sample.objects.filter(label='NA12891').select_related('variant')
+for sample in selectedSamples:
+    print sample.variants.all()

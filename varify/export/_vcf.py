@@ -17,6 +17,7 @@ class VcfExporter(BaseExporter):
 
     def write(self, iterable, buff=None, *args, **kwargs):
         header = []
+        request = kwargs['request']
         buff = self.get_file_obj(buff)
         template_path = os.path.join(settings.PROJECT_PATH,
                                      'varify/templates/vcfexport.vcf')

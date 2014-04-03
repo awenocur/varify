@@ -4,6 +4,7 @@ from avocado.export._base import BaseExporter
 from django.conf import settings
 from varify.variants.models import Variant
 import os
+import re
 
 log = logging.getLogger(__name__)
 
@@ -27,9 +28,10 @@ class VcfExporter(BaseExporter):
         template_file.close()
 
         if request.method == 'POST':
-            row = None
-            for line in request._stream:
-                pass
+            labels = []
+            for item in request._stream:
+                line = re.sub('[\n\r]', '', item)
+                labels.append(line)
                 #buff.write(self, line)
         else:
             for i, row_gen in enumerate(self.read(iterable,

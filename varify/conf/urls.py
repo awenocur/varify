@@ -53,7 +53,7 @@ urlpatterns += patterns(
         'serve', {'document_root': settings.STATIC_ROOT}),
 )
 
-#Allow testing of 404 and 500 pages in development
+# Allow testing of 404 and 500 pages in development
 if settings.DEBUG:
     urlpatterns += patterns(
         '',

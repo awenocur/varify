@@ -48,8 +48,13 @@ class VcfExporter(BaseExporter):
             rows = {}
             row_call_format = vcf.model.make_calldata_tuple(['GT'])
             row_call_format._types.append('String')
+            sampleIndexes = {}
+            sampleNum = 0
             for result in selectedResults:
                 sample = result.sample
+                if sample.label.encode('ascii', errors='backslashreplace') not in sampleIndexes:
+                    sampleIndexes[sample.label.encode('ascii', errors='backslashreplace')] = sampleNum
+                    sampleNum += 1
                 variant = result.variant
                 if variant.id in rows:
                     next_row=rows[variant.id]
@@ -64,13 +69,13 @@ class VcfExporter(BaseExporter):
                                  QUAL=result.quality,
                                  FILTER=None,
                                  INFO=None, FORMAT='GT',
-                                 sample_indexes={sample.label:0},
+                                 sample_indexes=sampleIndexes,
                                  samples=[])
                     rows[variant.id] = next_row
                 next_row_call_values = [result.genotype.label.encode('ascii', errors='backslashreplace')]
                 next_row.samples.append(vcf.model._Call(next_row, sample.label, row_call_format(*next_row_call_values)))
-                for next_row in rows.itervalues():
-                    writer.write_record(next_row)
+            for next_row in rows.itervalues():
+                writer.write_record(next_row)
 
         else:
             for i, row_gen in enumerate(self.read(iterable,

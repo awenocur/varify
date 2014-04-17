@@ -1,7 +1,7 @@
 import logging
 import time
 from optparse import make_option
-from django.db import transaction, DEFAULT_DB_ALIAS, DatabaseError
+from django.db import transaction, connections, DEFAULT_DB_ALIAS, DatabaseError
 from django.db.models import F, Q
 from django.core.management.base import BaseCommand
 from varify.samples.models import Cohort
@@ -22,6 +22,7 @@ class Command(BaseCommand):
 
     def handle(self, **options):
         database = options.get('database')
+        cursor = connections[database].cursor()
 
         if options.get('force'):
             cohorts = list(Cohort.objects.all())
@@ -31,6 +32,14 @@ class Command(BaseCommand):
                 Q(modified__gt=F('allele_freq_modified'))))
 
         log.debug('Computing for {0} cohorts'.format(len(cohorts)))
+
+        with transaction.commit_manually(database):
+            try:
+                cursor.execute('TRUNCATE "cohort_variant" RESTART IDENTITY')
+                transaction.commit()
+            except DatabaseError:
+                transaction.rollback()
+                log.exception('Could not truncate CohortVariant table')
 
         for cohort in cohorts:
             log.debug('"{0}" ({1} samples)...'.format(cohort, cohort.count))

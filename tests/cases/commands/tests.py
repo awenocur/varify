@@ -374,9 +374,9 @@ class GeneRanksTestCase(TestCase):
                            GENE_RANK_BASE_URL='api/tests/gene_rank'):
             management.call_command('samples', 'gene-ranks', 'NA12878')
 
-            self.assertTrue(self.mock_handler.messages['error'])
+            self.assertTrue(self.mock_handler.messages['warning'])
             self.assertTrue("Could not parse response" in
-                            self.mock_handler.messages['error'][-1])
+                            self.mock_handler.messages['warning'][-1])
 
         with self.settings(PHENOTYPE_ENDPOINT=
                            'http://localhost/api/tests/unparseable_date/%s/',
@@ -385,10 +385,9 @@ class GeneRanksTestCase(TestCase):
 
             self.assertTrue(self.mock_handler.messages['warning'])
             self.assertTrue("Could not parse 'last_modified'" in
-                            self.mock_handler.messages['warning'][-1])
-            self.assertTrue(self.mock_handler.messages['error'])
+                            self.mock_handler.messages['warning'][-2])
             self.assertTrue("Response from phenotype missing HPO Annotations"
-                            in self.mock_handler.messages['error'][-1])
+                            in self.mock_handler.messages['warning'][-1])
 
         with self.settings(PHENOTYPE_ENDPOINT=
                            'http://localhost/api/tests/unparseable_terms/%s/',
@@ -453,12 +452,10 @@ class GeneRanksTestCase(TestCase):
             self.assertTrue(Sample.objects.filter(
                 phenotype_modified__isnull=False).count(), 3)
 
-            # Check that the result count is what we expect. Each sample is
-            # knows to have 18 results associated with one or more of the three
-            # ranked genes in the mock data and there are 3 samples so we
-            # expect 54 new result scores.
-            self.assertEqual(ResultScore.objects.count(),
-                             initial_score_count + 54)
+            # We are not doing a varification of the ranker here, all we care
+            # about is that there were scores added.
+            self.assertGreater(ResultScore.objects.count(),
+                               initial_score_count)
             initial_score_count = ResultScore.objects.count()
 
             # Calling the gene-rank command again should skip all of the
@@ -662,3 +659,28 @@ class DeleteTestCase(QueueTestCase):
         self.assertEqual(0, Sample.objects.count())
         self.assertEqual(0, Batch.objects.count())
         self.assertEqual(0, Project.objects.count())
+
+@override_settings(VARIFY_SAMPLE_DIRS=SAMPLE_DIRS)
+class AlleleTestCase(QueueTestCase):
+    def setUp(self):
+        super(AlleleTestCase, self).setUp()
+
+        # Immediately validates and creates a sample
+        management.call_command('samples', 'queue')
+
+        # Synchronously work on queue
+        worker1 = get_worker('variants')
+        worker2 = get_worker('default')
+
+        # Work on variants...
+        worker1.work(burst=True)
+
+        # Work on effects...
+        worker2.work(burst=True)
+
+    def test_allele_freqs(self):
+        management.call_command('samples', 'allele-freqs')
+        firstCount = CohortVariant.objects.count()
+        self.assertNotEqual(firstCount, 0)
+        management.call_command('samples', 'allele-freqs')
+        self.assertEqual(firstCount, CohortVariant.objects.count())

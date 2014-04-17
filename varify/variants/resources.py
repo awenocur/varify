@@ -15,12 +15,11 @@ from .models import Variant
 log = logging.getLogger(__name__)
 
 try:
-    from solvebio.contrib.django_solvebio.client import client \
-        as solvebio_client
-    from solvebio import Filter, RangeFilter  # noqa
+    from solvebio.contrib.django_solvebio import SolveBio
+    from solvebio import SolveError, Filter
 except ImportError:
-    solvebio_client = None
-    log.warning('Could not import the SolveBio client')
+    SolveBio = None
+    log.warning('Could not import SolveBio')
 
 
 class VariantResource(ThrottledResource):
@@ -87,27 +86,34 @@ class VariantResource(ThrottledResource):
 
         data['cohorts'] = cohort_list
 
-        if solvebio_client and solvebio_client.is_enabled():
+        if SolveBio and SolveBio.is_enabled():
             data['solvebio'] = {}
 
-            # ClinVar integration -- use position, gene symbol, and HGVS
-            # notation as possible filters.
-            filters = RangeFilter(variant.chr, variant.pos, variant.pos)
-
-            if genes:
-                filters = filters | Filter(gene_symbol__in=list(genes))
+            # ClinVar integration -- use position and HGVS
+            filters = Filter(chromosome=variant.chr.value,
+                             start__lte=variant.pos,
+                             stop__gte=variant.pos)
 
             if hgvs_c_values:
                 filters = filters | Filter(hgvs_c__in=list(hgvs_c_values))
 
-            # returns None on failure and a list on success
-            clinvar = solvebio_client.query('clinvar', filters)
+            # TODO: add another clinvar query for reported gene-wide variants
+            # if genes:
+            #     filters = filters | Filter(gene_symbol__in=list(genes))
 
-            # only add the 'clinvar' key if the query succeeds
-            if clinvar is not None:
-                data['solvebio']['clinvar'] = clinvar
-            else:
-                log.error('SolveBio ClinVar query failed')
+            try:
+                # Query ClinVar by its alias, return 10 results/page
+                # TODO: client-side pagination
+                q = SolveBio.get_dataset('clinvar').query(
+                    limit=10,  # limit to 10 results (single page)
+                    filters=filters)
+                # Send the first page of results to the client
+                data['solvebio']['clinvar'] = {
+                    'results': q.results,
+                    'total': q.total
+                }
+            except SolveError as e:
+                log.exception('SolveBio ClinVar query failed: {0}'.format(e))
 
         return data
 

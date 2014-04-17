@@ -29,6 +29,10 @@ urlpatterns = patterns(
     url(r'^analysis/', TemplateView.as_view(template_name='index.html'),
         name='analysis'),
 
+    # Required for opening a sample
+    url(r'^sample/', TemplateView.as_view(template_name='index.html'),
+        name='sample'),
+
     url(r'^api/data/export/vcf/$', csrf_exempt(VcfExporterResource()), name='vcf'),
 
     # Serrano provides the REST API

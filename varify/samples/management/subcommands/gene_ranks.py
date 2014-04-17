@@ -90,8 +90,9 @@ class Command(BaseCommand):
             try:
                 phenotype_data = json.loads(response.content)
             except ValueError:
-                log.error("Could not parse response from {0}, skipping '{1}'."
-                          .format(url, sample.label))
+                log.warning(
+                    "Could not parse response from {0}, skipping '{1}'."
+                    .format(url, sample.label))
                 continue
 
             try:
@@ -109,8 +110,8 @@ class Command(BaseCommand):
             # If the parsed response doesn't contain any HPO terms then we can
             # skip this sample since we cannot rank genes without HPO terms.
             if not phenotype_data.get('hpoAnnotations'):
-                log.error("Response from phenotype missing HPO Annotations, "
-                          "skipping '{0}'.".format(sample.label))
+                log.warning("Response from phenotype missing HPO Annotations, "
+                            "skipping '{0}'.".format(sample.label))
                 continue
 
             if (not force and sample.phenotype_modified and
@@ -170,8 +171,9 @@ class Command(BaseCommand):
             try:
                 gene_data = json.loads(gene_response.content)
             except ValueError:
-                log.error("Could not parse response from {0}, skipping '{1}'."
-                          .format(settings.GENE_RANK_BASE_URL, sample.label))
+                log.warning(
+                    "Could not parse response from {0}, skipping '{1}'."
+                    .format(settings.GENE_RANK_BASE_URL, sample.label))
                 continue
 
             ranked_genes = gene_data['ranked_genes']
@@ -189,7 +191,10 @@ class Command(BaseCommand):
                         # itself.
                         genes = result.variant.effects\
                             .exclude(transcript__gene__symbol__isnull=True)\
-                            .values_list('transcript__gene__symbol', flat=True)
+                            .order_by('effect__impact')\
+                            .values_list(
+                                'transcript__gene__symbol', flat=True)\
+                            .distinct()
 
                         # If there is no gene on this result or the gene is
                         # not found in the list of ranked genes then skip this

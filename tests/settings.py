@@ -35,6 +35,7 @@ INSTALLED_APPS = (
     'guardian',
     'django_rq',
     'sts',
+    'reversion',
 
     'serrano',
     'avocado',

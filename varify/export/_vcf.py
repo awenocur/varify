@@ -44,7 +44,7 @@ class VcfExporter(BaseExporter):
                     labelCriteria = nextCriterion
                 else:
                     labelCriteria |= nextCriterion
-            selectedResults = allResults.filter(labelCriteria).select_related('sample')
+            selectedResults = allResults.prefetch_related('sample', 'variant').prefetch_related('variant__chr').filter(labelCriteria)
             rows = {}
             row_call_format = vcf.model.make_calldata_tuple(['GT'])
             row_call_format._types.append('String')
@@ -61,7 +61,7 @@ class VcfExporter(BaseExporter):
                 else:
                     next_row=vcf.model._Record(
                                  ID=variant.id,
-                                 CHROM=variant.chr,
+                                 CHROM=variant.chr.label,
                                  POS=variant.pos,
                                  REF=variant.ref,
                                  ALT=variant.alt,
@@ -100,5 +100,4 @@ class VcfExporter(BaseExporter):
                                              samples=None)
                                              # )
                 writer.write_record(next_row)
-
         return buff

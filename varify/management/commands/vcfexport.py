@@ -68,8 +68,11 @@ class Command(BaseCommand):
                              samples=[])
                 rows[variant.id] = next_row
             next_row_call_allelicDepth = None
-            if result.coverage_ref and result.coverage_alt:
-                next_row_call_allelicDepth = '{:d},{:d}'.format(result.coverage_ref, result.coverage_alt)
+            if result.coverage_ref:
+                altCoverage = 0
+                if result.coverage_alt:
+                    altCoverage = result.coverage_alt
+                next_row_call_allelicDepth = '{:d},{:d}'.format(result.coverage_ref, altCoverage)
             next_row_call_values = [result.genotype.label.encode('ascii', errors='backslashreplace'),
                                     next_row_call_allelicDepth,
                                     result.read_depth]

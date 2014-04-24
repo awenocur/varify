@@ -46,9 +46,10 @@ class VcfExporter(BaseExporter):
                     labelCriteria |= nextCriterion
             selectedResults = allResults.prefetch_related('sample', 'variant').prefetch_related('variant__chr').filter(labelCriteria)
             rows = {}
-            row_call_format = vcf.model.make_calldata_tuple(['GT', 'AD', 'DP'])
+            row_call_format = vcf.model.make_calldata_tuple(['GT', 'AD', 'DP', 'GQ'])
             row_call_format._types.append('String')
             row_call_format._types.append('String')
+            row_call_format._types.append('Integer')
             row_call_format._types.append('Integer')
             sampleIndexes = {}
             sampleNum = 0
@@ -70,7 +71,7 @@ class VcfExporter(BaseExporter):
                                  #replace the following stubs:
                                  QUAL=result.quality,
                                  FILTER=None,
-                                 INFO=None, FORMAT='GT:AD:DP',
+                                 INFO=None, FORMAT='GT:AD:DP:GQ',
                                  sample_indexes=sampleIndexes,
                                  samples=[])
                     rows[variant.id] = next_row
@@ -82,7 +83,8 @@ class VcfExporter(BaseExporter):
                     next_row_call_allelicDepth = '{:d},{:d}'.format(result.coverage_ref, altCoverage)
                 next_row_call_values = [result.genotype.label.encode('ascii', errors='backslashreplace'),
                                         next_row_call_allelicDepth,
-                                        result.read_depth]
+                                        result.read_depth,
+                                        result.genotype_quality]
                 next_row.samples.append(vcf.model._Call(next_row, sample.label, row_call_format(*next_row_call_values)))
             for next_row in rows.itervalues():
                 writer.write_record(next_row)

@@ -63,13 +63,13 @@ class Command(BaseCommand):
                              #replace the following stubs:
                              QUAL=result.quality,
                              FILTER=None,
-                             INFO=None, FORMAT='AD',
+                             INFO=None, FORMAT='GT:AD:DP',
                              sample_indexes=sampleIndexes,
                              samples=[])
                 rows[variant.id] = next_row
             next_row_call_allelicDepth = None
             if result.coverage_ref and result.coverage_alt:
-                next_row_call_allelicDepth = '{:d}{:d}'.format(result.coverage_ref, result.coverage_alt)
+                next_row_call_allelicDepth = '{:d},{:d}'.format(result.coverage_ref, result.coverage_alt)
             next_row_call_values = [result.genotype.label.encode('ascii', errors='backslashreplace'),
                                     next_row_call_allelicDepth,
                                     result.read_depth]

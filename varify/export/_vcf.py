@@ -44,7 +44,10 @@ class VcfExporter(BaseExporter):
                     labelCriteria = nextCriterion
                 else:
                     labelCriteria |= nextCriterion
-            selectedResults = allResults.prefetch_related('sample', 'variant').prefetch_related('variant__chr').filter(labelCriteria)
+            selectedResults = allResults.prefetch_related(
+                'sample', 'variant').prefetch_related(
+                'variant__chr').filter(
+                labelCriteria).order_by('variant__chr__order', 'variant__pos')
             rows = {}
             row_call_format = vcf.model.make_calldata_tuple(['GT', 'AD', 'DP', 'GQ'])
             row_call_format._types.append('String')

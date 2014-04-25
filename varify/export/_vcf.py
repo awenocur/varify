@@ -49,6 +49,7 @@ class VcfExporter(BaseExporter):
                 'variant__chr').filter(
                 labelCriteria).order_by('variant__chr__order', 'variant__pos')
             rows = {}
+            orderedRows = []
             row_call_format = vcf.model.make_calldata_tuple(['GT', 'AD', 'DP', 'GQ'])
             row_call_format._types.append('String')
             row_call_format._types.append('String')
@@ -81,6 +82,7 @@ class VcfExporter(BaseExporter):
                                  sample_indexes=sampleIndexes,
                                  samples=[])
                     rows[variant.id] = next_row
+                    orderedRows.append(next_row)
                 next_row_call_allelicDepth = None
                 if result.coverage_ref:
                     altCoverage = 0
@@ -92,7 +94,7 @@ class VcfExporter(BaseExporter):
                                         result.read_depth,
                                         result.genotype_quality]
                 next_row.samples.append(vcf.model._Call(next_row, sample.label, row_call_format(*next_row_call_values)))
-            for next_row in rows.itervalues():
+            for next_row in orderedRows:
                 writer.write_record(next_row)
 
         else:

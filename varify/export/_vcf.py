@@ -89,7 +89,7 @@ class VcfExporter(BaseExporter):
                     if result.coverage_alt:
                         altCoverage = result.coverage_alt
                     next_row_call_allelicDepth = '{:d},{:d}'.format(result.coverage_ref, altCoverage)
-                next_row_call_values = [result.genotype.label.encode('ascii', errors='backslashreplace'),
+                next_row_call_values = [result.genotype.value.encode('ascii', errors='backslashreplace'),
                                         next_row_call_allelicDepth,
                                         result.read_depth,
                                         result.genotype_quality]

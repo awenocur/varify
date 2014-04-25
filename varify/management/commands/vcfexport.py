@@ -55,8 +55,11 @@ class Command(BaseCommand):
             if variant.id in rows:
                 next_row=rows[variant.id]
             else:
+                rsid=variant.rsid
+                if rsid:
+                    rsid=rsid.encode('ascii', errors='backslashreplace')
                 next_row=vcf.model._Record(
-                             ID=variant.id,
+                             ID=rsid,
                              CHROM=variant.chr.label,
                              POS=variant.pos,
                              REF=variant.ref,

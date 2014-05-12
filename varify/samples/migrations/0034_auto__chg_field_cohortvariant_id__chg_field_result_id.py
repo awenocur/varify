@@ -1,180 +1,65 @@
-# encoding: utf-8
+# -*- coding: utf-8 -*-
 import datetime
 from south.db import db
 from south.v2 import SchemaMigration
 from django.db import models
 
 class Migration(SchemaMigration):
-
-    depends_on = (
-        ('avocado', '0034_auto__add_field_datafield_type'),
-        ('variants', '0001_initial'),
-    )
-
+    # Backwards migration is NOT supported.
+    # MySQL, Oracle, and SQLite are NOT supported.
+    # ONLY forward migration in PostgreSQL is supported.
     def forwards(self, orm):
+        # Changing field 'CohortVariant.id'
+        # Override auto generated migration code
+        db.execute('ALTER TABLE "cohort_variant" ALTER COLUMN "id" TYPE bigint')
 
-        # Adding model 'Person'
-        db.create_table('person', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('notes', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
-            ('created', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-            ('modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
-            ('mrn', self.gf('django.db.models.fields.CharField')(max_length=50, null=True, blank=True)),
-            ('sex', self.gf('django.db.models.fields.CharField')(max_length=20, null=True, blank=True)),
-            ('proband', self.gf('django.db.models.fields.BooleanField')(default=False)),
-        ))
-        db.send_create_signal('samples', ['Person'])
-
-        # Adding model 'Relation'
-        db.create_table('relation', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('notes', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
-            ('created', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-            ('modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
-            ('person', self.gf('django.db.models.fields.related.ForeignKey')(related_name='family', to=orm['samples.Person'])),
-            ('relative', self.gf('django.db.models.fields.related.ForeignKey')(related_name='relative_of', to=orm['samples.Person'])),
-            ('type', self.gf('django.db.models.fields.CharField')(max_length=20)),
-            ('generation', self.gf('django.db.models.fields.IntegerField')(default=0)),
-        ))
-        db.send_create_signal('samples', ['Relation'])
-
-        # Adding model 'Project'
-        db.create_table('project', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('notes', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
-            ('created', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-            ('modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=100)),
-        ))
-        db.send_create_signal('samples', ['Project'])
-
-        # Adding model 'Cohort'
-        db.create_table('project_cohort', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('notes', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
-            ('created', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-            ('modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=100, db_index=True)),
-            ('investigator', self.gf('django.db.models.fields.CharField')(max_length=100, null=True, blank=True)),
-            ('project', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['samples.Project'])),
-            ('published', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('count', self.gf('django.db.models.fields.IntegerField')(default=0)),
-        ))
-        db.send_create_signal('samples', ['Cohort'])
-
-        # Adding model 'CohortVariant'
-        db.create_table('cohort_variant', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('variant', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['variants.Variant'])),
-            ('cohort', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['samples.Cohort'])),
-            ('af', self.gf('django.db.models.fields.FloatField')(null=True, db_index=True)),
-        ))
-        db.send_create_signal('samples', ['CohortVariant'])
-
-        # Adding unique constraint on 'CohortVariant', fields ['variant', 'cohort']
-        db.create_unique('cohort_variant', ['variant_id', 'cohort_id'])
-
-        # Adding model 'Sample'
-        db.create_table('sample', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('notes', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
-            ('created', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-            ('modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
-            ('label', self.gf('django.db.models.fields.CharField')(max_length=100, db_index=True)),
-            ('cohort', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='samples', null=True, to=orm['samples.Cohort'])),
-            ('version', self.gf('django.db.models.fields.IntegerField')()),
-            ('person', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='samples', null=True, to=orm['samples.Person'])),
-            ('count', self.gf('django.db.models.fields.IntegerField')(default=0)),
-            ('bio_sample', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
-            ('published', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('md5', self.gf('django.db.models.fields.CharField')(max_length=32, null=True, blank=True)),
-            ('line', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
-        ))
-        db.send_create_signal('samples', ['Sample'])
-
-        # Adding unique constraint on 'Sample', fields ['label', 'cohort']
-        db.create_unique('sample', ['label', 'cohort_id'])
-
-        # Adding model 'SampleRun'
-        db.create_table('sample_run', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('notes', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
-            ('created', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-            ('modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
-            ('run_time', self.gf('django.db.models.fields.DateTimeField')()),
-            ('facility', self.gf('django.db.models.fields.CharField')(max_length=100, null=True)),
-            ('dax_xml', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
-            ('genome', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['genome.Genome'], null=True, blank=True)),
-            ('sample', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['samples.Sample'])),
-        ))
-        db.send_create_signal('samples', ['SampleRun'])
-
-        # Adding model 'Result'
-        db.create_table('sample_result', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('notes', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
-            ('created', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-            ('modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
-            ('sample', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['samples.Sample'], null=True, blank=True)),
-            ('variant', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['variants.Variant'], null=True, blank=True)),
-            ('quality', self.gf('django.db.models.fields.FloatField')(db_index=True, null=True, blank=True)),
-            ('read_depth', self.gf('django.db.models.fields.IntegerField')(db_index=True, null=True, blank=True)),
-            ('genotype', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['genome.Genotype'], null=True, blank=True)),
-            ('genotype_quality', self.gf('django.db.models.fields.FloatField')(null=True, blank=True)),
-            ('coverage_ref', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
-            ('coverage_alt', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
-            ('phred_scaled_likelihood', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
-            ('in_dbsnp', self.gf('django.db.models.fields.NullBooleanField')(null=True, blank=True)),
-            ('downsampling', self.gf('django.db.models.fields.NullBooleanField')(null=True, blank=True)),
-            ('spanning_deletions', self.gf('django.db.models.fields.FloatField')(null=True, blank=True)),
-            ('mq', self.gf('django.db.models.fields.FloatField')(null=True, blank=True)),
-            ('mq0', self.gf('django.db.models.fields.FloatField')(null=True, blank=True)),
-            ('baseq_rank_sum', self.gf('django.db.models.fields.FloatField')(null=True, blank=True)),
-            ('mq_rank_sum', self.gf('django.db.models.fields.FloatField')(null=True, blank=True)),
-            ('read_pos_rank_sum', self.gf('django.db.models.fields.FloatField')(null=True, blank=True)),
-            ('strand_bias', self.gf('django.db.models.fields.FloatField')(null=True, blank=True)),
-            ('homopolymer_run', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
-            ('haplotype_score', self.gf('django.db.models.fields.FloatField')(null=True, blank=True)),
-            ('quality_by_depth', self.gf('django.db.models.fields.FloatField')(null=True, blank=True)),
-            ('fisher_strand', self.gf('django.db.models.fields.FloatField')(null=True, blank=True)),
-        ))
-        db.send_create_signal('samples', ['Result'])
-
+        # Changing field 'Result.id'
+        # Override auto generated migration code
+        db.execute('ALTER TABLE "sample_result" ALTER COLUMN "id" TYPE bigint')
+        # Change FK fields 'result_score.result_id' and 'assessment.sample_result_id'
+        db.execute('ALTER TABLE "result_score" ALTER COLUMN "result_id" TYPE bigint')
+        db.execute('ALTER TABLE "assessment" ALTER COLUMN "sample_result_id" TYPE bigint')
 
     def backwards(self, orm):
-
-        # Removing unique constraint on 'Sample', fields ['label', 'cohort']
-        db.delete_unique('sample', ['label', 'cohort_id'])
-
-        # Removing unique constraint on 'CohortVariant', fields ['variant', 'cohort']
-        db.delete_unique('cohort_variant', ['variant_id', 'cohort_id'])
-
-        # Deleting model 'Person'
-        db.delete_table('person')
-
-        # Deleting model 'Relation'
-        db.delete_table('relation')
-
-        # Deleting model 'Project'
-        db.delete_table('project')
-
-        # Deleting model 'Cohort'
-        db.delete_table('project_cohort')
-
-        # Deleting model 'CohortVariant'
-        db.delete_table('cohort_variant')
-
-        # Deleting model 'Sample'
-        db.delete_table('sample')
-
-        # Deleting model 'SampleRun'
-        db.delete_table('sample_run')
-
-        # Deleting model 'Result'
-        db.delete_table('sample_result')
-
+        raise RuntimeError("Cannot convert bigint to integer")
 
     models = {
+        'auth.group': {
+            'Meta': {'object_name': 'Group'},
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '80'}),
+            'permissions': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.Permission']", 'symmetrical': 'False', 'blank': 'True'})
+        },
+        'auth.permission': {
+            'Meta': {'ordering': "('content_type__app_label', 'content_type__model', 'codename')", 'unique_together': "(('content_type', 'codename'),)", 'object_name': 'Permission'},
+            'codename': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
+            'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['contenttypes.ContentType']"}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '50'})
+        },
+        'auth.user': {
+            'Meta': {'object_name': 'User'},
+            'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
+            'email': ('django.db.models.fields.EmailField', [], {'max_length': '75', 'blank': 'True'}),
+            'first_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
+            'groups': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.Group']", 'symmetrical': 'False', 'blank': 'True'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'is_active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
+            'is_staff': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'is_superuser': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'last_login': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
+            'last_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
+            'password': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
+            'user_permissions': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.Permission']", 'symmetrical': 'False', 'blank': 'True'}),
+            'username': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '30'})
+        },
+        'contenttypes.contenttype': {
+            'Meta': {'ordering': "('name',)", 'unique_together': "(('app_label', 'model'),)", 'object_name': 'ContentType', 'db_table': "'django_content_type'"},
+            'app_label': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
+        },
         'genome.chromosome': {
             'Meta': {'ordering': "['order']", 'object_name': 'Chromosome', 'db_table': "'chromosome'"},
             'code': ('django.db.models.fields.IntegerField', [], {'null': 'True'}),
@@ -210,24 +95,49 @@ class Migration(SchemaMigration):
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'term': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '1000'})
         },
-        'samples.cohort': {
-            'Meta': {'object_name': 'Cohort', 'db_table': "'project_cohort'"},
+        'samples.batch': {
+            'Meta': {'ordering': "('project', 'label')", 'unique_together': "(('project', 'name'),)", 'object_name': 'Batch', 'db_table': "'batch'"},
             'count': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
             'created': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'investigator': ('django.db.models.fields.CharField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),
+            'label': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '100', 'db_index': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'notes': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
-            'project': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['samples.Project']"}),
+            'project': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'batches'", 'to': "orm['samples.Project']"}),
             'published': ('django.db.models.fields.BooleanField', [], {'default': 'False'})
+        },
+        'samples.cohort': {
+            'Meta': {'ordering': "('-order', 'name')", 'object_name': 'Cohort', 'db_table': "'cohort'"},
+            'allele_freq_modified': ('django.db.models.fields.DateTimeField', [], {'null': 'True'}),
+            'autocreated': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'batch': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['samples.Batch']", 'null': 'True', 'blank': 'True'}),
+            'count': ('django.db.models.fields.PositiveIntegerField', [], {'default': '0'}),
+            'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'modified': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),
+            'order': ('django.db.models.fields.SmallIntegerField', [], {'default': '0'}),
+            'project': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['samples.Project']", 'null': 'True', 'blank': 'True'}),
+            'published': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'samples': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['samples.Sample']", 'through': "orm['samples.CohortSample']", 'symmetrical': 'False'}),
+            'user': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']", 'null': 'True', 'blank': 'True'})
+        },
+        'samples.cohortsample': {
+            'Meta': {'object_name': 'CohortSample', 'db_table': "'cohort_sample'"},
+            'added': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'object_set': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['samples.Cohort']", 'db_column': "'cohort_id'"}),
+            'removed': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'set_object': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['samples.Sample']", 'db_column': "'sample_id'"})
         },
         'samples.cohortvariant': {
             'Meta': {'unique_together': "(('variant', 'cohort'),)", 'object_name': 'CohortVariant', 'db_table': "'cohort_variant'"},
             'af': ('django.db.models.fields.FloatField', [], {'null': 'True', 'db_index': 'True'}),
             'cohort': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['samples.Cohort']"}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'variant': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['variants.Variant']"})
+            'id': ('varify.core.models.BigAutoField', [], {'primary_key': 'True'}),
+            'variant': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'cohort_details'", 'to': "orm['variants.Variant']"})
         },
         'samples.person': {
             'Meta': {'object_name': 'Person', 'db_table': "'person'"},
@@ -241,9 +151,10 @@ class Migration(SchemaMigration):
             'sex': ('django.db.models.fields.CharField', [], {'max_length': '20', 'null': 'True', 'blank': 'True'})
         },
         'samples.project': {
-            'Meta': {'object_name': 'Project', 'db_table': "'project'"},
+            'Meta': {'unique_together': "(('name',),)", 'object_name': 'Project', 'db_table': "'project'"},
             'created': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'label': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'notes': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'})
@@ -260,7 +171,8 @@ class Migration(SchemaMigration):
             'type': ('django.db.models.fields.CharField', [], {'max_length': '20'})
         },
         'samples.result': {
-            'Meta': {'object_name': 'Result', 'db_table': "'sample_result'"},
+            'Meta': {'unique_together': "(('sample', 'variant'),)", 'object_name': 'Result', 'db_table': "'sample_result'"},
+            'base_counts': ('django.db.models.fields.CharField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),
             'baseq_rank_sum': ('django.db.models.fields.FloatField', [], {'null': 'True', 'blank': 'True'}),
             'coverage_alt': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
             'coverage_ref': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
@@ -271,7 +183,7 @@ class Migration(SchemaMigration):
             'genotype_quality': ('django.db.models.fields.FloatField', [], {'null': 'True', 'blank': 'True'}),
             'haplotype_score': ('django.db.models.fields.FloatField', [], {'null': 'True', 'blank': 'True'}),
             'homopolymer_run': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'id': ('varify.core.models.BigAutoField', [], {'primary_key': 'True'}),
             'in_dbsnp': ('django.db.models.fields.NullBooleanField', [], {'null': 'True', 'blank': 'True'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'mq': ('django.db.models.fields.FloatField', [], {'null': 'True', 'blank': 'True'}),
@@ -281,39 +193,61 @@ class Migration(SchemaMigration):
             'phred_scaled_likelihood': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'quality': ('django.db.models.fields.FloatField', [], {'db_index': 'True', 'null': 'True', 'blank': 'True'}),
             'quality_by_depth': ('django.db.models.fields.FloatField', [], {'null': 'True', 'blank': 'True'}),
+            'raw_read_depth': ('django.db.models.fields.IntegerField', [], {'db_index': 'True', 'null': 'True', 'blank': 'True'}),
             'read_depth': ('django.db.models.fields.IntegerField', [], {'db_index': 'True', 'null': 'True', 'blank': 'True'}),
             'read_pos_rank_sum': ('django.db.models.fields.FloatField', [], {'null': 'True', 'blank': 'True'}),
-            'sample': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['samples.Sample']", 'null': 'True', 'blank': 'True'}),
+            'sample': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'results'", 'to': "orm['samples.Sample']"}),
             'spanning_deletions': ('django.db.models.fields.FloatField', [], {'null': 'True', 'blank': 'True'}),
             'strand_bias': ('django.db.models.fields.FloatField', [], {'null': 'True', 'blank': 'True'}),
-            'variant': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['variants.Variant']", 'null': 'True', 'blank': 'True'})
+            'variant': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['variants.Variant']"})
+        },
+        'samples.resultscore': {
+            'Meta': {'object_name': 'ResultScore', 'db_table': "'result_score'"},
+            'created': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
+            'notes': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
+            'rank': ('django.db.models.fields.IntegerField', [], {}),
+            'result': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'score'", 'unique': 'True', 'to': "orm['samples.Result']"}),
+            'score': ('django.db.models.fields.FloatField', [], {})
         },
         'samples.sample': {
-            'Meta': {'unique_together': "(('label', 'cohort'),)", 'object_name': 'Sample', 'db_table': "'sample'"},
+            'Meta': {'ordering': "('project', 'batch', 'label')", 'unique_together': "(('batch', 'name', 'version'),)", 'object_name': 'Sample', 'db_table': "'sample'"},
+            'batch': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'samples'", 'to': "orm['samples.Batch']"}),
             'bio_sample': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
-            'cohort': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'samples'", 'null': 'True', 'to': "orm['samples.Cohort']"}),
             'count': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
             'created': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'label': ('django.db.models.fields.CharField', [], {'max_length': '100', 'db_index': 'True'}),
-            'line': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'label': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'md5': ('django.db.models.fields.CharField', [], {'max_length': '32', 'null': 'True', 'blank': 'True'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'notes': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'person': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'samples'", 'null': 'True', 'to': "orm['samples.Person']"}),
+            'phenotype_modified': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
+            'project': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'samples'", 'to': "orm['samples.Project']"}),
             'published': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'vcf_colname': ('django.db.models.fields.CharField', [], {'max_length': '200', 'null': 'True', 'blank': 'True'}),
             'version': ('django.db.models.fields.IntegerField', [], {})
+        },
+        'samples.samplemanifest': {
+            'Meta': {'object_name': 'SampleManifest', 'db_table': "'sample_manifest'"},
+            'content': ('django.db.models.fields.TextField', [], {}),
+            'created': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
+            'notes': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
+            'path': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
+            'sample': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'manifest'", 'unique': 'True', 'to': "orm['samples.Sample']"})
         },
         'samples.samplerun': {
             'Meta': {'object_name': 'SampleRun', 'db_table': "'sample_run'"},
+            'completed': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
             'created': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'dax_xml': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
-            'facility': ('django.db.models.fields.CharField', [], {'max_length': '100', 'null': 'True'}),
             'genome': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['genome.Genome']", 'null': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'notes': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
-            'run_time': ('django.db.models.fields.DateTimeField', [], {}),
             'sample': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['samples.Sample']"})
         },
         'variants.variant': {
@@ -332,10 +266,10 @@ class Migration(SchemaMigration):
         },
         'variants.variantphenotype': {
             'Meta': {'object_name': 'VariantPhenotype', 'db_table': "'variant_phenotype'"},
-            'hgmd_id': ('django.db.models.fields.CharField', [], {'max_length': '30', 'null': 'True', 'blank': 'True'}),
+            'hgmd_id': ('django.db.models.fields.CharField', [], {'db_index': 'True', 'max_length': '30', 'null': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'phenotype': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['phenotypes.Phenotype']"}),
-            'variant': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['variants.Variant']"})
+            'variant': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'variant_phenotypes'", 'to': "orm['variants.Variant']"})
         },
         'variants.varianttype': {
             'Meta': {'ordering': "['order']", 'object_name': 'VariantType', 'db_table': "'variant_type'"},
@@ -348,3 +282,4 @@ class Migration(SchemaMigration):
     }
 
     complete_apps = ['samples']
+    

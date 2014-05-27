@@ -18,8 +18,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         buff = sys.stdout
-        template_path = os.path.join(settings.PROJECT_PATH,
-                                     'varify/templates/vcfexport.vcf')
+        outer_path = os.path.dirname(os.path.realpath(__file__))
+        template_path = os.path.join(outer_path,
+                                     '../../templates/vcfexport.vcf')
         template_file = open(template_path, "r")
         template_reader = vcf.Reader(template_file)
         writer = vcf.Writer(buff, template_reader)

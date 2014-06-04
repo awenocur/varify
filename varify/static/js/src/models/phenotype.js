@@ -16,7 +16,7 @@ define([
         },
 
         parsePriority: function(value) {
-            return parseInt(value.priority, 10) || this.lowestPriority;
+            return parseInt(value.priority, 10) || this.lowestPriority + 1;
         },
 
         parse: function(attrs) {
@@ -47,13 +47,6 @@ define([
                 path = attrs.pedigree;
                 path = path.replace('/phenotype/media', 'api/samples');
                 attrs.pedigree = utils.toAbsolutePath(path);
-
-                // Update the thumbnail path
-                if (attrs.pedigree_thumbnail) { // jshint ignore: line
-                    path = attrs.pedigree_thumbnail; // jshint ignore: line
-                    path = path.replace('/phenotype/media', 'api/samples');
-                    attrs.pedigree_thumbnail = utils.toAbsolutePath(path); // jshint ignore: line
-                }
             }
 
             // Format the date properties if they are present

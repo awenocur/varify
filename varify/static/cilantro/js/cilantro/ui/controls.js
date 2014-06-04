@@ -1,2 +1,2 @@
-define(["underscore","./controls/base","./controls/range","./controls/date","./controls/number","./controls/search","./controls/infograph","./controls/registry","./controls/null"],function(t){var e=Array.prototype.slice.call(arguments,1);return t.extend.apply(t,[{}].concat(e))});
-//@ sourceMappingURL=controls.js.map
+define(["underscore","./controls/base","./controls/range","./controls/date","./controls/number","./controls/search","./controls/infograph","./controls/registry","./controls/null","./controls/text"],function(o){var r=Array.prototype.slice.call(arguments,1);return o.extend.apply(o,[{}].concat(r))});
+//# sourceMappingURL=controls.js.map

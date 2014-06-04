@@ -18,25 +18,20 @@ require({
         }
     }
 }, [
+    'jquery',
+    'underscore',
     'cilantro',
-    'project/ui',
-    'project/csrf',
-    'tpl!../../templates/tables/header.html',
-    'tpl!../../templates/modals/result.html',
-    'tpl!../../templates/modals/phenotypes.html',
-    'tpl!../../templates/modals/phenotype/annotations.html',
-    'tpl!../../templates/modals/phenotype/annotationsItem.html',
-    'tpl!../../templates/modals/phenotype/diagnoses.html',
-    'tpl!../../templates/modals/phenotype/diagnosesItem.html',
-    'tpl!../../templates/modals/phenotype/empty.html',
-    'tpl!../../templates/controls/sift.html',
-    'tpl!../../templates/controls/polyphen.html',
-    'tpl!../../templates/workflows/results.html',
-    'tpl!../../templates/export/dialog.html',
-    'tpl!../../templates/sample/loader.html'
-], function(c, ui, csrf, header, result, phenotype, annotations, annotationsItem,
-       diagnoses, diagnosesItem, empty, sift, polyphen, results, exportDialog,
-       sampleLoader) {
+    'varify/ui',
+    'varify/models',
+    'varify/csrf'
+], function($, _, c, ui, models) {
+
+    var SAMPLE_CONCEPT_ID = 2,
+        SAMPLE_FIELD_ID = 111;
+
+    // Add namespaced variables for reference in other modules
+    c.config.set('varify.sample.concept', SAMPLE_CONCEPT_ID);
+    c.config.set('varify.sample.field', SAMPLE_FIELD_ID);
 
     // Session options
     var options = {
@@ -47,32 +42,17 @@ require({
     var augmentFixedView = function() {
         var newView = {
             view: {
-                columns: [2]
+                columns: [SAMPLE_CONCEPT_ID]
             }
         };
 
         var json;
-        if ((json = c.session.data.views.session.get('json')) != null) {
-            newView['view']['ordering'] = json['ordering'];
+        if (c.session && (json = c.session.data.views.session.get('json'))) {
+            newView.view.ordering = json.ordering;
         }
 
         return newView;
     };
-
-    // Define custom templates
-    c.templates.set('varify/export/dialog', exportDialog);
-    c.templates.set('varify/tables/header', header);
-    c.templates.set('varify/modals/result', result);
-    c.templates.set('varify/modals/phenotype', phenotype);
-    c.templates.set('varify/modals/phenotype/annotations', annotations);
-    c.templates.set('varify/modals/phenotype/annotationsItem', annotationsItem);
-    c.templates.set('varify/modals/phenotype/diagnoses', diagnoses);
-    c.templates.set('varify/modals/phenotype/diagnosesItem', diagnosesItem);
-    c.templates.set('varify/modals/phenotype/empty', empty);
-    c.templates.set('varify/controls/sift', sift);
-    c.templates.set('varify/controls/polyphen', polyphen);
-    c.templates.set('varify/workflows/results', results);
-    c.templates.set('varify/sample/loader', sampleLoader);
 
     // Globally disable stats on all fields
     c.config.set('fields.defaults.form.stats', false);
@@ -114,39 +94,25 @@ require({
         control: 'nullSelector'
     }]);
 
-    // A simple handler for CONTEXT_REQUIRED and CONTEXT_INVALID events that
-    // tells the user which concept is required(when possible) or prints a
-    // generic message in the case the concept name could not be found.
-    var notifyRequired = (function(_this) {
-        return function(concepts) {
-            if (c.data == null) return;
+    // If no sample is selected, open the dialog to select one
+    var showSampleDialog = function(required) {
+        if (_.findWhere(required, {concept: SAMPLE_CONCEPT_ID})) {
+            c.dialogs.sample.open();
+        }
+    };
 
-            var names = _.map(concepts || [], function(concept) {
-                if ((currConcept = c.data.concepts.get(concept.concept)) != null) {
-                    return currConcept.get('name');
-                }
-            });
-
-            var message;
-            if (names) {
-                message = 'The following concepts are required: ' + names.join(', ');
-            }
-            else {
-                message = 'There are 1 or more required concepts';
-            }
-
-            return c.notify({
-                level: 'error',
-                message: message
-            });
-        };
-    })(this);
+    // Use sample dialog as means of selecting the sample
+    c.on(c.CONCEPT_FOCUS, function(concept) {
+        if (concept === SAMPLE_CONCEPT_ID) {
+            c.dialogs.sample.open();
+        }
+    });
 
     // Mark the Sample concept as required and display a notification to the
     // user when it is not populated.
-    c.config.set('filters.required', [{concept: 2}]);
-    c.on(c.CONTEXT_INVALID, notifyRequired);
-    c.on(c.CONTEXT_REQUIRED, notifyRequired);
+    c.config.set('filters.required', [{concept: SAMPLE_CONCEPT_ID}]);
+    c.on(c.CONTEXT_INVALID, showSampleDialog);
+    c.on(c.CONTEXT_REQUIRED, showSampleDialog);
 
     // Open the default session when Cilantro is ready
     c.ready(function() {
@@ -160,6 +126,15 @@ require({
             // "duplicate" rows in the results table that sometimes occured due to
             // the user's view.
             c.config.set('session.defaults.data.preview', augmentFixedView);
+
+            // Add additional data to the session
+            this.data.samples = new models.Samples();
+            this.data.samples.fetch({reset: true});
+
+            // Ensure the session context is valid
+            this.data.contexts.once('sync', function() {
+                this.session.validate();
+            });
 
             // Panels are defined in their own namespace since they shared
             // across workflows
@@ -192,11 +167,18 @@ require({
 
                 deleteQuery: new c.ui.DeleteQueryDialog(),
 
-                resultDetails: new ui.ResultDetails,
+                resultDetails: new ui.ResultDetails(),
 
                 phenotype: new ui.Phenotype({
                     context: this.data.contexts.session
-                })
+                }),
+
+                sample: new ui.SampleDialog({
+                    context: this.data.contexts.session,
+                    samples: this.data.samples
+                }),
+
+                variantSet: new ui.VariantSetDialog()
             };
 
             var elements = [];
@@ -219,6 +201,14 @@ require({
             main.append.apply(main, elements);
 
             c.workflows = {
+                workspace: new ui.WorkspaceWorkflow({
+                    queries: this.data.queries,
+                    context: this.data.contexts.session,
+                    view: this.data.views.session,
+                    public_queries: this.data.public_queries,   // jshint ignore:line
+                    samples: this.data.samples
+                }),
+
                 query: new c.ui.QueryWorkflow({
                     context: this.data.contexts.session,
                     concepts: this.data.concepts.queryable
@@ -234,11 +224,21 @@ require({
 
                 sampleload: new ui.SampleLoader({
                     context: this.data.contexts.session
+                }),
+
+                queryload: new c.ui.QueryLoader({
+                    queries: this.data.queries,
+                    context: this.data.contexts.session,
+                    view: this.data.views.session
                 })
             };
 
             // Define routes
             var routes = [{
+                id: 'workspace',
+                route: 'workspace/',
+                view: c.workflows.workspace
+            }, {
                 id: 'query',
                 route: 'query/',
                 view: c.workflows.query
@@ -250,32 +250,11 @@ require({
                 id: 'sample-load',
                 route: 'sample/:sample_id/',
                 view: c.workflows.sampleload
-            }];
-
-            c.workflows.workspace = new c.ui.WorkspaceWorkflow({
-                queries: this.data.queries,
-                context: this.data.contexts.session,
-                view: this.data.views.session,
-                public_queries: this.data.public_queries
-            });
-
-            routes.push({
-                id: 'workspace',
-                route: 'workspace/',
-                view: c.workflows.workspace
-            });
-
-            c.workflows.queryload = new c.ui.QueryLoader({
-                queries: this.data.queries,
-                context: this.data.contexts.session,
-                view: this.data.views.session
-            });
-
-            routes.push({
+            }, {
                 id: 'query-load',
                 route: 'results/:query_id/',
                 view: c.workflows.queryload
-            });
+            }];
 
             // Register routes and start the session
             this.start(routes);

@@ -16,6 +16,76 @@ define([
         }
     };
 
+    // Converts a list of values to a list of objects where the key for each
+    // object is the supplied key and the value is the value from the list.
+    var listToObjects = function(list, key) {
+        var data = [], item;
+
+        for (var i = 0; i < list.length; i++) {
+            item = {};
+            item[key] = list[i];
+            data.push(item);
+        }
+
+        return data;
+    };
+
+    var groupArticlesByType = function(variant) {
+        var data = [];
+
+        data.push({
+            type: 'variant',
+            articles: listToObjects(variant.articles, 'id')
+        });
+
+        for (var i = 0; i < variant.uniqueGenes.length; i++) {
+            data.push({
+                type: 'gene',
+                articles: listToObjects(variant.uniqueGenes[i].articles, 'id'),
+                gene: variant.uniqueGenes[i]
+            });
+        }
+
+        return data;
+    };
+
+
+    var groupEffectsByType = function(effects) {
+        var data = [];
+
+        if (effects && effects.length) {
+            var groupedEffects = _.groupBy(effects, 'type');
+            for (var type in groupedEffects) {
+                data.push({
+                    type: type,
+                    effects: groupedEffects[type]
+                });
+            }
+        }
+
+        return data;
+    };
+
+
+    var groupPhenotypesByType = function(variant) {
+        var data = [];
+
+        data.push({
+            type: 'variant',
+            phenotypes: variant.phenotypes
+        });
+
+        for (var i = 0; i < variant.uniqueGenes.length; i++) {
+            data.push({
+                type: 'gene',
+                phenotypes: variant.uniqueGenes[i].phenotypes,
+                gene: variant.uniqueGenes[i]
+            });
+        }
+
+        return data;
+    };
+
 
     var effectImpactPriority = function(impact) {
         var priority;
@@ -74,12 +144,12 @@ define([
          * assumptions listed above. The only flexibility this method supports
          * is for the seconds to be an integer or a float.
          */
-        if (str == null) {
+        if (!str) {
             return;
         }
 
         var dateTimeFields = str.split('T');
-        if (dateTimeFields.length != 2) {
+        if (dateTimeFields.length !== 2) {
             return;
         }
 
@@ -203,6 +273,9 @@ define([
         depthClass: depthClass,
         effectImpactPriority: effectImpactPriority,
         getRootUrl: getRootUrl,
+        groupArticlesByType: groupArticlesByType,
+        groupEffectsByType: groupEffectsByType,
+        groupPhenotypesByType: groupPhenotypesByType,
         parseISO8601UTC: parseISO8601UTC,
         priorityClass: priorityClass,
         qualityClass: qualityClass,

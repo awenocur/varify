@@ -5,7 +5,7 @@ from copy import deepcopy
 # into the parent object.
 Chromosome = {
     'fields': ['chr'],
-    'key_map': {
+    'aliases': {
         'chr': 'label',
     },
     'merge': True,
@@ -62,7 +62,7 @@ GeneSynonym = {
 
 GeneTranscript = {
     'fields': ['transcript'],
-    'key_map': {
+    'aliases': {
         'transcript': 'refseq_id',
     },
     'values_list': True,
@@ -105,7 +105,7 @@ TranscriptGene = {
 # This version of the resource includes the gene this transcript represents
 Transcript = {
     'fields': ['transcript', 'gene'],
-    'key_map': {
+    'aliases': {
         'transcript': 'refseq_id',
     },
     'related': {
@@ -119,7 +119,7 @@ Transcript = {
 # suitable.
 VariantType = {
     'fields': ['type'],
-    'key_map': {
+    'aliases': {
         'type': 'label',
     },
     'merge': True,
@@ -139,7 +139,7 @@ PolyPhen2 = {
 # of a Variant
 ThousandG = {
     'fields': ['all_af', 'amr_af', 'afr_af', 'asn_af', 'eur_af'],
-    'key_map': {
+    'aliases': {
         'all_af': 'af',
     }
 }
@@ -148,7 +148,7 @@ ThousandG = {
 # of a Variant
 Evs = {
     'fields': ['all_af', 'afr_af', 'eur_af', 'read_depth'],
-    'key_map': {
+    'aliases': {
         'eur_af': 'ea_af',
         'afr_af': 'aa_af',
     }
@@ -158,7 +158,7 @@ Evs = {
 # Lexicon, only use the label
 EffectRegion = {
     'fields': ['region'],
-    'key_map': {
+    'aliases': {
         'region': 'label',
     },
     'merge': True,
@@ -167,7 +167,7 @@ EffectRegion = {
 # Lexicon, only use the label
 EffectImpact = {
     'fields': ['impact'],
-    'key_map': {
+    'aliases': {
         'impact': 'label',
     },
     'merge': True,
@@ -176,7 +176,7 @@ EffectImpact = {
 # Extended lexicon, who other properties about the effect type
 Effect = {
     'fields': ['type', 'description', 'impact', 'region'],
-    'key_map': {
+    'aliases': {
         'type': 'label',
     },
     'related': {
@@ -196,7 +196,7 @@ VariantEffect = {
         'transcript': Transcript,
         'functional_class': {
             'fields': ['functional_class'],
-            'key_map': {
+            'aliases': {
                 'functional_class': 'label',
             },
             'merge': True,
@@ -220,7 +220,7 @@ CohortVariant = {
     'related': {
         'cohort': {
             'fields': ['name', 'size'],
-            'key_map': {
+            'aliases': {
                 'size': 'count',
             },
             'merge': True,
@@ -237,7 +237,7 @@ Variant = {
                'phenotypes'],
 
     # Map to cleaner names
-    'key_map': {
+    'aliases': {
         '1000g': 'thousandg',
         'phenotypes': 'variant_phenotypes',
     },
@@ -262,7 +262,7 @@ Variant = {
 Project = {
     'fields': ['project'],
     'merge': True,
-    'key_map': {
+    'aliases': {
         'project': 'label',
     },
 }
@@ -273,7 +273,7 @@ Project = {
 Batch = {
     'fields': ['batch'],
     'merge': True,
-    'key_map': {
+    'aliases': {
         'batch': 'label',
     },
 }
@@ -283,7 +283,8 @@ Batch = {
 # project and batch names are merged into the sample object to
 # remove excessive nesting.
 Sample = {
-    'fields': [':pk', 'label', 'count', 'batch', 'project'],
+    'fields': [':pk', 'label', 'count', 'batch', 'project', 'version',
+               'created'],
     'related': {
         'batch': Batch,
         'project': Project,
@@ -293,7 +294,7 @@ Sample = {
 
 ResultVariant = {
     'fields': ['variant_id', 'chr', 'pos', 'ref', 'alt'],
-    'key_map': {
+    'aliases': {
         'variant_id': 'id',
     },
     'related': {
@@ -305,7 +306,7 @@ ResultVariant = {
 
 Genotype = {
     'fields': ['genotype', 'genotype_description'],
-    'key_map': {
+    'aliases': {
         'genotype': 'value',
         'genotype_description': 'label',
     },
@@ -329,7 +330,7 @@ SampleResult = {
                 'strand_bias', 'mq', 'mq0', 'mq_rank_sum',
                 'phred_scaled_likelihood', 'read_pos_rank_sum', 'in_dbsnp',
                 'coverage_ref', 'coverage_alt'],
-    'key_map': {
+    'aliases': {
         'base_counts': 'base_count_map',
         'read_depth_alt': 'coverage_alt',
         'read_depth_ref': 'coverage_ref',
@@ -347,8 +348,17 @@ SampleResult = {
 SampleResultVariant = deepcopy(SampleResult)
 SampleResultVariant['related']['variant'] = {
     'fields': ['variant_id'],
-    'key_map': {
+    'aliases': {
         'variant_id': 'id',
     },
     'merge': True,
+}
+
+
+ResultSet = {
+    'fields': [':local', 'created', 'modified'],
+    'exclude': ['user', 'results'],
+    'related': {
+        'sample': Sample
+    }
 }

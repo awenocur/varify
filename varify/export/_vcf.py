@@ -8,6 +8,7 @@ import re
 from varify.samples.models import Sample
 from varify.samples.models import Result
 from django.db.models import Q
+import json
 
 log = logging.getLogger(__name__)
 
@@ -32,10 +33,10 @@ class VcfExporter(BaseExporter):
         template_file.close()
 
         if request.method == 'POST':
-            labels = []
-            for item in request._stream:
-                line = re.sub('[\n\r]', '', item)
-                labels.append(line)
+
+            data = json.load(request._stream)
+
+            labels = data['samples'];
 
             allResults = Result.objects.get_query_set()
             labelCriteria = None

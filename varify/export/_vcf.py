@@ -116,7 +116,6 @@ class VcfExporter(BaseExporter):
                                  samples=[])
                     rows[variant.id] = next_row
                     orderedRows.append(next_row)
-                next_row_call_allelicDepth = None
                 refCoverage = 0
                 if result.coverage_ref:
                     refCoverage = result.coverage_ref
@@ -134,6 +133,15 @@ class VcfExporter(BaseExporter):
                     vcf.model._Call(next_row, sample.label,
                                     row_call_format(*next_row_call_values)))
             for next_row in orderedRows:
+                remainingSampleLabels = sampleIndexes.keys()
+                if len(next_row.samples) < len(remainingSampleLabels):
+                    for next_sample in next_row.samples:
+                        remainingSampleLabels.remove(next_sample.sample)
+                    for next_label in remainingSampleLabels:
+                        next_row.samples.append(
+                            vcf.model._Call(
+                                next_row, next_label,
+                                row_call_format(None, None, None, None)))
                 writer.write_record(next_row)
 
         else:

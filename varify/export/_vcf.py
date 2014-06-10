@@ -62,7 +62,9 @@ class VcfExporter(BaseExporter):
                 else:
                     labelCriteria |= nextCriterion
             for chr, start, end in zip(chromosomes, beginningBp, endingBp):
-                nextCriterion = Q(variant__chr__label = chr) & Q(variant__pos__lt = end + 1) & Q(variant__pos__gt = start - 1)
+                nextCriterion = Q(variant__chr__label = chr) & Q(
+                    variant__pos__lt = end + 1) & Q(variant__pos__gt = start
+                                                                       - 1)
                 if rangeCriteria == None:
                     rangeCriteria = nextCriterion
                 else:
@@ -87,8 +89,11 @@ class VcfExporter(BaseExporter):
             sampleNum = 0
             for result in selectedResults:
                 sample = result.sample
-                if sample.label.encode('ascii', errors='backslashreplace') not in sampleIndexes:
-                    sampleIndexes[sample.label.encode('ascii', errors='backslashreplace')] = sampleNum
+                if sample.label.encode('ascii', errors='backslashreplace')\
+                        not in sampleIndexes:
+                    sampleIndexes[
+                        sample.label.encode(
+                            'ascii', errors='backslashreplace')] = sampleNum
                     sampleNum += 1
                 variant = result.variant
                 if variant.id in rows:
@@ -112,16 +117,22 @@ class VcfExporter(BaseExporter):
                     rows[variant.id] = next_row
                     orderedRows.append(next_row)
                 next_row_call_allelicDepth = None
+                refCoverage = 0
                 if result.coverage_ref:
-                    altCoverage = 0
-                    if result.coverage_alt:
-                        altCoverage = result.coverage_alt
-                    next_row_call_allelicDepth = '{:d},{:d}'.format(result.coverage_ref, altCoverage)
-                next_row_call_values = [result.genotype.value.encode('ascii', errors='backslashreplace'),
+                    refCoverage = result.coverage_ref
+                altCoverage = 0
+                if result.coverage_alt:
+                    altCoverage = result.coverage_alt
+                next_row_call_allelicDepth = '{:d},{:d}'.format(
+                    refCoverage, altCoverage)
+                next_row_call_values = [result.genotype.value.encode(
+                    'ascii', errors='backslashreplace'),
                                         next_row_call_allelicDepth,
                                         result.read_depth,
                                         result.genotype_quality]
-                next_row.samples.append(vcf.model._Call(next_row, sample.label, row_call_format(*next_row_call_values)))
+                next_row.samples.append(
+                    vcf.model._Call(next_row, sample.label,
+                                    row_call_format(*next_row_call_values)))
             for next_row in orderedRows:
                 writer.write_record(next_row)
 

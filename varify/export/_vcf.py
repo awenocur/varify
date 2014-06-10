@@ -142,6 +142,13 @@ class VcfExporter(BaseExporter):
                             vcf.model._Call(
                                 next_row, next_label,
                                 row_call_format(None, None, None, None)))
+                #The following code really should be part of PyVCF:
+                #sorting the calls within the row:
+                reorderedSamples = [None] * len(next_row.samples)
+                for call in next_row.samples:
+                    reorderedSamples[next_row._sample_indexes[call.sample]] =\
+                        call
+                next_row.samples = reorderedSamples
                 writer.write_record(next_row)
 
         else:

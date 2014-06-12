@@ -92,7 +92,8 @@ class VcfExporter(BaseExporter):
             #arrays; store the predicate as a Q object
             for chr, start, end in zip(chromosomes, beginningBp, endingBp):
                 nextCriterion = Q(variant__chr__label = chr) & Q(
-                    variant__pos__lt = end + 1) & Q(variant__pos__gt = start                                               - 1)
+                    variant__pos__lt = end + 1) & Q(variant__pos__gt = start
+                                                                       - 1)
                 if rangeCriteria == None:
                     rangeCriteria = nextCriterion
                 else:

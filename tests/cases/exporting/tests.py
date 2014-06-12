@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+from varify import export
+>>>>>>> populated unit test for VCF exporter
 from django.test.utils import override_settings
 from django.test import TransactionTestCase
 from django.core.cache import cache
@@ -6,14 +10,21 @@ from rq.queue import get_failed_queue
 import os
 from varify.export._vcf import VcfExporter
 import hashlib
+<<<<<<< HEAD
 from django import http
 from StringIO import StringIO
+=======
+>>>>>>> populated unit test for VCF exporter
 
+TESTS_DIR = os.path.join(os.path.dirname(__file__), '../..')
+SAMPLE_DIRS = [os.path.join(TESTS_DIR, 'samples')]
 
-def test_vcf(self):
-        exporter = export.VCFExporter(self.concepts)
-        buff = exporter.write(self.query)
-        #TODO: insert validation of buffer here
+class QueueTestCase(TransactionTestCase):
+    def setUp(self):
+        cache.clear()
+        get_queue('variants').empty()
+        get_queue('default').empty()
+        get_failed_queue(get_connection()).empty()
 
 @override_settings(VARIFY_SAMPLE_DIRS=SAMPLE_DIRS)
 class SampleLoadTestCase(QueueTestCase):

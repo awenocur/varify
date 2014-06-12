@@ -1,3 +1,9 @@
+#VCF exporter
+#The primary purpose of this exporter is not to generate verbatim copies of
+#VCF entries loaded into the db, but to use VCF as a common format that
+#integrates into a bioinformatics workflow.  This exporter works with a client
+#currently hosted at http://github.research.chop.edu/wenocur/varify_client
+
 import logging
 import vcf
 from avocado.export._base import BaseExporter
@@ -32,17 +38,23 @@ class VcfExporter(BaseExporter):
         writer = vcf.Writer(buff, template_reader)
         template_file.close()
 
+        #Eventually, POST and GET should be handled by the same code;
+        #GET shall require info that's not always provided by the iterable;
+        #POST should ignore the iterable by design, since it interfaces with
+        #a dedicated client
         if request.method == 'POST':
-
+            #decode the parameters passed from the client
             data = json.load(request._stream)
-
+            #get the list of sample labels
             labels = data['samples']
-
+            #dictionaries encoded by the client to store chromosome ranges
             rangeDicts = None
+            #three ordered lists that correspond to the ranges above
             chromosomes = []
             beginningBp = []
             endingBp = []
 
+            #chromosome ranges are optional
             if 'ranges' in data:
                 rangeDicts = data['ranges'];
             #TODO: catch invalid/missing entries in the following dicts:
@@ -52,43 +64,81 @@ class VcfExporter(BaseExporter):
                     beginningBp.append(int(dict["start"]))
                     endingBp.append(int(dict["end"]))
 
+        #The following is an ORM-based implementation that works for now;
+        #this should be migrated to use Avocado if possible
+            #start with a QuerySet for all results
             allResults = Result.objects.get_query_set()
+            #these shall be Q objects
             labelCriteria = None
             rangeCriteria = None
+
+            #take the union of all sets matching sample labels in the labels
+            #array; store the predicate as a Q object
             for nextLabel in labels:
                 nextCriterion = Q(sample__label=nextLabel)
                 if labelCriteria == None:
                     labelCriteria = nextCriterion
                 else:
                     labelCriteria |= nextCriterion
+
+            #take the union of all sets matching ranges in the 3 corresponding
+            #arrays; store the predicate as a Q object
             for chr, start, end in zip(chromosomes, beginningBp, endingBp):
                 nextCriterion = Q(variant__chr__label = chr) & Q(
-                    variant__pos__lt = end + 1) & Q(variant__pos__gt = start
-                                                                       - 1)
+                    variant__pos__lt = end + 1) & Q(variant__pos__gt = start                                               - 1)
                 if rangeCriteria == None:
                     rangeCriteria = nextCriterion
                 else:
                     rangeCriteria |= nextCriterion
+
+            #if no ranges were provided, use a dummy Q object
+            if rangeCriteria == None:
+                rangeCriteria = Q()
+
+            #grab the results, finally; take the intersection of the two Q
+            #objects defined above, sort by the order defined in the VCF v4
+            #specification
             selectedResults = allResults.prefetch_related(
                 'sample', 'variant').prefetch_related(
                 'variant__chr').filter(
                 labelCriteria).filter(
                 rangeCriteria).order_by(
                 'variant__chr__order', 'variant__pos')
+
+            #dict of rows in the VCF file; this is used to look up rows that
+            #were already created, to aggregate samples by variant;
+            #each row represents one variant
             rows = {}
+
+            #VCF rows in the proper order, defined by the DBMS sorting by
+            #variant positon
             orderedRows = []
+
+            #this is something pyVCF needs to know how the call is formatted;
+            #each sample listed in a row has sub-columns in this order
+            #pyVCF requires this info to be declared again a different way
             row_call_format = vcf.model.make_calldata_tuple(['GT',
                                                              'AD',
                                                              'DP',
                                                              'GQ'])
+            #data types for the fields declared on the prior line
             row_call_format._types.append('String')
             row_call_format._types.append('String')
             row_call_format._types.append('Integer')
             row_call_format._types.append('Integer')
+            #lookup dict for sample indexes; this is linked to each PyVCF
+            #Record object
             sampleIndexes = {}
+            #keep track of the number of samples detected
             sampleNum = 0
+            #loop over all Results returned
             for result in selectedResults:
+                #this sample may or may not be the first for a particular
+                #variant
                 sample = result.sample
+                #PyVCF uses ASCII, sorry; here's where we check whether we're
+                #already handling a particular sample; if we're not, assign
+                #it an index
                 if sample.label.encode('ascii', errors='backslashreplace')\
                         not in sampleIndexes:
                     sampleIndexes[
@@ -96,42 +146,56 @@ class VcfExporter(BaseExporter):
                             'ascii', errors='backslashreplace')] = sampleNum
                     sampleNum += 1
                 variant = result.variant
+                #here's where we check whether we're already handling a
+                #particular variant; if we're not, create a new PyVCF record
                 if variant.id in rows:
                     next_row=rows[variant.id]
                 else:
                     rsid=variant.rsid
                     if rsid:
                         rsid=rsid.encode('ascii', errors='backslashreplace')
+                    #we haven't seen this variant before, create a new record
                     next_row=vcf.model._Record(
                                  ID=rsid,
                                  CHROM=variant.chr.label,
                                  POS=variant.pos,
                                  REF=variant.ref,
                                  ALT=variant.alt,
-                                 #replace the following stubs:
                                  QUAL=result.quality,
                                  FILTER=None,
+                                 #here's where the call format is specified
+                                 #a second time, as required by PyVCF
                                  INFO=None, FORMAT='GT:AD:DP:GQ',
                                  sample_indexes=sampleIndexes,
                                  samples=[])
+                    #make it known that this variant has a PyVCF record
                     rows[variant.id] = next_row
+                    #the order of rows as retrieved from the DB should be right
+                    #for the VCF
                     orderedRows.append(next_row)
+                #hack to replace NULLs in the DB with zero where appropriate
                 refCoverage = 0
                 if result.coverage_ref:
                     refCoverage = result.coverage_ref
                 altCoverage = 0
                 if result.coverage_alt:
                     altCoverage = result.coverage_alt
+                #populate the allelic depth field for a particular call
                 next_row_call_allelicDepth = '{:d},{:d}'.format(
                     refCoverage, altCoverage)
+                #generate call values array for PyVCF
                 next_row_call_values = [result.genotype.value.encode(
                     'ascii', errors='backslashreplace'),
                                         next_row_call_allelicDepth,
                                         result.read_depth,
                                         result.genotype_quality]
+                #add call to its corresponding PyVCF record
                 next_row.samples.append(
                     vcf.model._Call(next_row, sample.label,
                                     row_call_format(*next_row_call_values)))
+            #add nulls to replace missing calls; this is necessary for variants
+            #not called for all samples in the VCF; this should really be done
+            #by PyVCF
             for next_row in orderedRows:
                 remainingSampleLabels = sampleIndexes.keys()
                 if len(next_row.samples) < len(remainingSampleLabels):
@@ -157,6 +221,7 @@ class VcfExporter(BaseExporter):
 
                 writer.write_record(next_row)
 
+        #junk code to make the VCF export option from the UI generate something
         else:
             for i, row_gen in enumerate(self.read(iterable,
                                                   *args, **kwargs)):

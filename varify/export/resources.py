@@ -2,6 +2,7 @@ from django.http import QueryDict
 from serrano.resources.exporter import ExporterResource
 from avocado.models import DataView
 
+
 class VcfExporterResource(ExporterResource):
 
     def get_view(self, request, attrs=None):
@@ -19,8 +20,8 @@ class VcfExporterResource(ExporterResource):
             request, 'vcf', **kwargs)
 
     def post(self, request, **kwargs):
-    #TODO: remove following hack once Serrano ceases to require data attr
-        #the following is a hack, to prevent Serrano from crashing
+        # TODO: remove following hack once Serrano ceases to require data attr
+        # the following is a hack, to prevent Serrano from crashing
         request.data = QueryDict('')
         return super(VcfExporterResource, self).post(
             request, 'vcf', **kwargs)

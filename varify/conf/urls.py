@@ -33,7 +33,8 @@ urlpatterns = patterns(
     url(r'^sample/', TemplateView.as_view(template_name='index.html'),
         name='sample'),
 
-    url(r'^api/data/export/vcf/$', csrf_exempt(VcfExporterResource()), name='vcf'),
+    url(r'^api/data/export/vcf/$',
+        csrf_exempt(VcfExporterResource()), name='vcf'),
 
     # Serrano provides the REST API
     url(r'^api/', include('serrano.urls')),

@@ -9,6 +9,7 @@ from varify.samples.models import Sample
 from varify.samples.models import Result
 from django.db.models import Q
 import json
+from StringIO import StringIO
 
 log = logging.getLogger(__name__)
 
@@ -17,6 +18,19 @@ class VcfExporter(BaseExporter):
     short_name = 'VCF'
     long_name = 'Variant Call Format'
 
+    #descriptions of the fields currently supported by the exporter;
+    #this is to be prepended to the actual header, describing lines
+    VcfFileHeader =\
+        '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n'\
+        '##FORMAT=<ID=AD,Number=.,Type=Integer,Description="Allelic '\
+            'depths for the ref and alt alleles in the order listed">\n'\
+        '##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Approximate'\
+            ' read depth (reads with MQ=255 or with bad mates are '\
+            'filtered)">\n'\
+        '##FORMAT=<ID=GQ,Number=1,Type=Float,Description="Genotype '\
+        'Quality">\n'\
+        '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT'
+
     file_extension = 'vcf'
     content_type = 'text/variant-call-format'
 
@@ -24,13 +38,6 @@ class VcfExporter(BaseExporter):
         header = []
         request = kwargs['request'];
         buff = self.get_file_obj(buff)
-        outer_path = os.path.dirname(os.path.realpath(__file__))
-        template_path = os.path.join(outer_path,
-                                     '../templates/vcfexport.vcf')
-        template_file = open(template_path, "r")
-        template_reader = vcf.Reader(template_file)
-        writer = vcf.Writer(buff, template_reader)
-        template_file.close()
 
         if request.method == 'POST':
 
@@ -132,6 +139,24 @@ class VcfExporter(BaseExporter):
                 next_row.samples.append(
                     vcf.model._Call(next_row, sample.label,
                                     row_call_format(*next_row_call_values)))
+
+            #prepare string for sample headers
+            justSampleIndexes = sampleIndexes.values()
+            justSampleNames = sampleIndexes.keys()
+            sortedSampleNames = zip(*sorted(zip(justSampleIndexes,
+                                                justSampleNames)))[1]
+            templateSampleString = '\t' + '\t'.join(sortedSampleNames)
+
+            #create a VCF writer based on a programmatically generated template
+            fake_template_file=StringIO(self.VcfFileHeader +
+                                        templateSampleString)
+            template_reader = vcf.Reader(fake_template_file)
+            writer = vcf.Writer(buff, template_reader)
+            fake_template_file.close()
+
+            #add nulls to replace missing calls; this is necessary for variants
+            #not called for all samples in the VCF; this should really be done
+            #by PyVCF
             for next_row in orderedRows:
                 remainingSampleLabels = sampleIndexes.keys()
                 if len(next_row.samples) < len(remainingSampleLabels):
@@ -158,6 +183,10 @@ class VcfExporter(BaseExporter):
                 writer.write_record(next_row)
 
         else:
+            fake_template_file=StringIO(self.VcfFileHeader)
+            template_reader = vcf.Reader(fake_template_file)
+            writer = vcf.Writer(buff, template_reader)
+            fake_template_file.close()
             for i, row_gen in enumerate(self.read(iterable,
                                                   *args, **kwargs)):
                 row = []

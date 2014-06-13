@@ -1,4 +1,3 @@
-from varify import export
 from django.test.utils import override_settings
 from django.test import TransactionTestCase
 from django.core.cache import cache

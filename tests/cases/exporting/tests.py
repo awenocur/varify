@@ -7,6 +7,8 @@ from rq.queue import get_failed_queue
 import os
 from varify.export._vcf import VcfExporter
 import hashlib
+from django import http
+from StringIO import StringIO
 
 TESTS_DIR = os.path.join(os.path.dirname(__file__), '../..')
 SAMPLE_DIRS = [os.path.join(TESTS_DIR, 'samples')]
@@ -34,9 +36,11 @@ class SampleLoadTestCase(QueueTestCase):
         worker1.work(burst=True)
         worker2.work(burst=True)
 
-        filename = os.path.join(os.path.dirname(__file__)/request.json)
+        json = '{"ranges": [{"start": 140000000, "end": 143500000, "chrom": "'\
+               '""1"}], "samples": ["NA12891", "NA12892", "NA12893"]}'
+        request = http.Request()
+        request._stream = StringIO(json)
         exporter = VcfExporter()
-        exporter.get_file_obj(filename)
-        buff = exporter.write(None)
-        hash = hashlib.md5(buff)
-        self.assertequal(hash.digest(), 'blarg')
+        buff = exporter.write(None, request = request)
+        hash = hashlib.md5(buff.content)
+        self.assertequal(hash.hexdigest(), '7d21e4d8875b0d3e9f84a0d72626c700')

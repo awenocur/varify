@@ -35,11 +35,11 @@ class SampleLoadTestCase(QueueTestCase):
         worker1.work(burst=True)
         worker2.work(burst=True)
 
-        json = '{"ranges": [{"start": 140000000, "end": 143500000, "chrom": "'\
-               '""1"}], "samples": ["NA12891", "NA12892", "NA12893"]}'
+        json = '{"ranges": [{"start": 1, "end": 144000000, "chrom": "'\
+               '""1"}], "samples": ["NA12891", "NA12892", "NA12878"]}'
         request = http.Request()
         request._stream = StringIO(json)
         exporter = VcfExporter()
         buff = exporter.write(None, request = request)
         hash = hashlib.md5(buff.content)
-        self.assertequal(hash.hexdigest(), '7d21e4d8875b0d3e9f84a0d72626c700')
+        self.assertequal(hash.hexdigest(), '97419d94bcd14a87b83185f065511f10')

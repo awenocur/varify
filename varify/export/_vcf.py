@@ -26,23 +26,27 @@ class VcfExporter(BaseExporter):
 
     #descriptions of the fields currently supported by the exporter;
     #this is to be prepended to the actual header, describing lines
-    VcfFileHeader =\
-        '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n'\
-        '##FORMAT=<ID=AD,Number=.,Type=Integer,Description="Allelic '\
-            'depths for the ref and alt alleles in the order listed">\n'\
-        '##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Approximate'\
-            ' read depth (reads with MQ=255 or with bad mates are '\
-            'filtered)">\n'\
-        '##FORMAT=<ID=GQ,Number=1,Type=Float,Description="Genotype '\
-        'Quality">\n'\
-        '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT'
 
     file_extension = 'vcf'
     content_type = 'text/variant-call-format'
 
     def write(self, iterable, buff=None, *args, **kwargs):
         header = []
-        request = kwargs['request'];
+        request = kwargs['request']
+        VcfFileHeader =\
+            '##fileformat=VCFv4.1\n'\
+            '##fileDate=20140613\n'\
+            '##source=' + request.get_host() + \
+            '\n##reference=GRCh37\n'\
+            '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n'\
+            '##FORMAT=<ID=AD,Number=.,Type=Integer,Description="Allelic '\
+                'depths for the ref and alt alleles in the order listed">\n'\
+            '##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Approximate'\
+                ' read depth (reads with MQ=255 or with bad mates are '\
+                'filtered)">\n'\
+            '##FORMAT=<ID=GQ,Number=1,Type=Float,Description="Genotype '\
+            'Quality">\n'\
+            '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT'
         buff = self.get_file_obj(buff)
 
         #Eventually, POST and GET should be handled by the same code;
@@ -210,7 +214,7 @@ class VcfExporter(BaseExporter):
             templateSampleString = '\t' + '\t'.join(sortedSampleNames)
 
             #create a VCF writer based on a programmatically generated template
-            fake_template_file=StringIO(self.VcfFileHeader +
+            fake_template_file=StringIO(VcfFileHeader +
                                         templateSampleString)
             template_reader = vcf.Reader(fake_template_file)
             writer = vcf.Writer(buff, template_reader)

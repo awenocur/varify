@@ -20,15 +20,14 @@ class VcfExporter(BaseExporter):
     short_name = 'VCF'
     long_name = 'Variant Call Format'
 
-    # descriptions of the fields currently supported by the exporter;
-    # this is to be prepended to the actual header, describing lines
-
     file_extension = 'vcf'
     content_type = 'text/variant-call-format'
 
     def write(self, iterable, buff=None, *args, **kwargs):
         header = []
         request = kwargs['request']
+        # descriptions of the fields currently supported by the exporter;
+        # this is to be prepended to the actual header, describing lines
         VcfFileHeader =\
             '##fileformat=VCFv4.1\n'\
             '##fileDate=20140613\n'\

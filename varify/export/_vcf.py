@@ -7,11 +7,7 @@
 import logging
 import vcf
 from avocado.export._base import BaseExporter
-from django.conf import settings
 from varify.variants.models import Variant
-import os
-import re
-from varify.samples.models import Sample
 from varify.samples.models import Result
 from django.db.models import Q
 import json
@@ -206,6 +202,13 @@ class VcfExporter(BaseExporter):
                     vcf.model._Call(next_row, sample.label,
                                     row_call_format(*next_row_call_values)))
 
+            #sort samples as they are found on the command line
+            i = 0;
+            for label in labels:
+                if(label in sampleIndexes):
+                    sampleIndexes[label] = i
+                    i += 1
+
             #prepare string for sample headers
             justSampleIndexes = sampleIndexes.values()
             justSampleNames = sampleIndexes.keys()
@@ -247,6 +250,7 @@ class VcfExporter(BaseExporter):
                 next_row.samples = reorderedSamples
 
                 writer.write_record(next_row)
+            writer.close()
 
         #junk code to make the VCF export option from the UI generate something
         else:

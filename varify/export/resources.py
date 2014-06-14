@@ -30,5 +30,5 @@ class VcfExporterResource(ExporterResource):
         return super(VcfExporterResource, self).dispatch(*args, **kwargs)
 
     supported_accept_types = ('*/*',)
-    supported_content_types = ('text/plain',)
+    supported_content_types = ('application/json',)
     attrs = ''

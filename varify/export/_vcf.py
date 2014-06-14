@@ -12,6 +12,7 @@ from varify.samples.models import Result
 from django.db.models import Q
 import json
 from StringIO import StringIO
+import time
 
 log = logging.getLogger(__name__)
 
@@ -30,8 +31,8 @@ class VcfExporter(BaseExporter):
         # this is to be prepended to the actual header, describing lines
         VcfFileHeader =\
             '##fileformat=VCFv4.1\n'\
-            '##fileDate=20140613\n'\
-            '##source=' + request.get_host() + \
+            '##fileDate=' + time.strftime("%Y%m%d") + \
+            '\n##source=' + request.get_host() + \
             '\n##reference=GRCh37\n'\
             '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n'\
             '##FORMAT=<ID=AD,Number=.,Type=Integer,Description="Allelic '\

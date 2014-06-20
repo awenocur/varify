@@ -5,7 +5,6 @@ from django.contrib import admin
 from django.template.loader import add_to_builtins
 from django.views.generic import RedirectView, TemplateView
 from varify.export.resources import VcfExporterResource
-from django.views.decorators.csrf import csrf_exempt
 
 add_to_builtins('bootstrapform.templatetags.bootstrap')
 add_to_builtins('avocado.templatetags.avocado_tags')
@@ -33,8 +32,7 @@ urlpatterns = patterns(
     url(r'^sample/', TemplateView.as_view(template_name='index.html'),
         name='sample'),
 
-    url(r'^api/data/export/vcf/$',
-        csrf_exempt(VcfExporterResource()), name='vcf'),
+    url(r'^api/data/export/vcf/$', VcfExporterResource(), name='vcf'),
 
     # Serrano provides the REST API
     url(r'^api/', include('serrano.urls')),

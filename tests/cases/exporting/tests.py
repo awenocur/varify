@@ -1,13 +1,13 @@
+import os
+import hashlib
+from StringIO import StringIO
+from django import http
 from django.test.utils import override_settings
 from django.test import TransactionTestCase
 from django.core.cache import cache
 from django_rq import get_worker, get_queue, get_connection
 from rq.queue import get_failed_queue
-import os
 from varify.export._vcf import VcfExporter
-import hashlib
-from django import http
-from StringIO import StringIO
 
 TESTS_DIR = os.path.join(os.path.dirname(__file__), '../..')
 SAMPLE_DIRS = [os.path.join(TESTS_DIR, 'samples')]

@@ -33,8 +33,8 @@ class VcfExporter(BaseExporter):
         # this is to be prepended to the actual header, describing lines
         vcf_file_header = textwrap.dedent('''\
             ##fileformat=VCFv4.1
-            ##fileDate= ''') + time.strftime("%Y%m%d") + textwrap.dedent('''\
-            ##source=''') + request.get_host() + textwrap.dedent('''\
+            ##fileDate= ''' + time.strftime("%Y%m%d") + '''
+            ##source=''' + request.get_host() + '''
             ##reference=GRCh37
             ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
             ##FORMAT=<ID=AD,Number=.,Type=Integer,Description="Allelic depths for the ref and alt alleles in the order listed">

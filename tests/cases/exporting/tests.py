@@ -1,12 +1,14 @@
+import os
+import hashlib
+from StringIO import StringIO
+from json import dumps
+from django import http
 from django.test.utils import override_settings
 from django.test import TransactionTestCase
 from django.core.cache import cache
 from django_rq import get_worker, get_queue, get_connection
 from rq.queue import get_failed_queue
 from varify.export._vcf import VcfExporter
-import hashlib
-from django import http
-from StringIO import StringIO
 
 TESTS_DIR = os.path.join(os.path.dirname(__file__), '../..')
 SAMPLE_DIRS = [os.path.join(TESTS_DIR, 'samples')]
@@ -34,8 +36,10 @@ class SampleLoadTestCase(QueueTestCase):
         worker1.work(burst=True)
         worker2.work(burst=True)
 
-        json = '{"ranges": [{"start": 1, "end": 144000000, "chrom": "'\
-               '""1"}], "samples": ["NA12891", "NA12892", "NA12878"]}'
+        test_params = {'ranges': [{'start': 1, 'end': 144000000, 'chrom': 1}],
+                       'samples': ['NA12891', 'NA12892', 'NA12878']}
+
+        json = dumps(test_params)
         request = http.Request()
         request._stream = StringIO(json)
         exporter = VcfExporter()

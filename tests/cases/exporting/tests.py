@@ -1,6 +1,7 @@
 import os
 import hashlib
 from StringIO import StringIO
+from json import dumps
 from django import http
 from django.test.utils import override_settings
 from django.test import TransactionTestCase
@@ -35,8 +36,10 @@ class SampleLoadTestCase(QueueTestCase):
         worker1.work(burst=True)
         worker2.work(burst=True)
 
-        json = '{"ranges": [{"start": 1, "end": 144000000, "chrom": "'\
-               '""1"}], "samples": ["NA12891", "NA12892", "NA12878"]}'
+        test_params = {'ranges': [{'start': 1, 'end': 144000000, 'chrom': 1}],
+                       'samples': ['NA12891', 'NA12892', 'NA12878']}
+
+        json = dumps(test_params)
         request = http.Request()
         request._stream = StringIO(json)
         exporter = VcfExporter()

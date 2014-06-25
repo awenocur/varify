@@ -10,9 +10,9 @@ import textwrap
 import logging
 import vcf
 from cStringIO import StringIO
+from socket import gethostname
 from django.db.models import Q
 from avocado.export._base import BaseExporter
-from varify.variants.models import Variant
 from varify.samples.models import Result
 
 log = logging.getLogger(__name__)
@@ -25,16 +25,19 @@ class VcfExporter(BaseExporter):
     file_extension = 'vcf'
     content_type = 'text/variant-call-format'
 
-    def write(self, iterable, buff=None, *args, **kwargs):
-        header = []
-        request = kwargs['request']
+    def write(self, iterable, buff=None, request=None, *args, **kwargs):
+
+        #figure out what we call this data source:
+        vcf_source = gethostname()
+        if request:
+            vcf_source = request.get_host()
 
         # descriptions of the fields currently supported by the exporter;
         # this is to be prepended to the actual header, describing lines
         vcf_file_header = textwrap.dedent('''\
             ##fileformat=VCFv4.1
             ##fileDate= ''' + time.strftime("%Y%m%d") + '''
-            ##source=''' + request.get_host() + '''
+            ##source=''' + vcf_source + '''
             ##reference=GRCh37
             ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
             ##FORMAT=<ID=AD,Number=.,Type=Integer,Description="Allelic depths for the ref and alt alleles in the order listed">

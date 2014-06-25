@@ -40,8 +40,7 @@ class VcfExporter(BaseExporter):
             ##FORMAT=<ID=AD,Number=.,Type=Integer,Description="Allelic depths for the ref and alt alleles in the order listed">
             ##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Approximate read depth (reads with MQ=255 or with bad mates are filtered)">
             ##FORMAT=<ID=GQ,Number=1,Type=Float,Description="Genotype Quality">
-            #CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT'
-        ''')  # noqa
+            #CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT''')  # noqa
         buff = self.get_file_obj(buff)
         # Eventually, POST and GET should be handled by the same code;
         # GET shall require info that's not always provided by the iterable;

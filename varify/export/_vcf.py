@@ -27,7 +27,7 @@ class VcfExporter(BaseExporter):
 
     def write(self, iterable, buff=None, request=None, *args, **kwargs):
 
-        #figure out what we call this data source:
+        # figure out what we call this data source:
         vcf_source = gethostname()
         if request:
             vcf_source = request.get_host()
@@ -103,7 +103,7 @@ class VcfExporter(BaseExporter):
                     range_criteria = next_criterion
                 else:
                     range_criteria |= next_criterion
-        else: # the iterable is being used
+        else:  # the iterable is being used
             result_ids = []
             for row in iterable:
                 result_ids.append(row[0])
@@ -228,7 +228,7 @@ class VcfExporter(BaseExporter):
         just_sample_indexes = sample_indexes.values()
         just_sample_names = sample_indexes.keys()
         sorted_sample_names = zip(*sorted(zip(just_sample_indexes,
-                                            just_sample_names)))[1]
+                                              just_sample_names)))[1]
         template_sample_string = '\t' + '\t'.join(sorted_sample_names)
 
         # create a VCF writer based on a programmatically generated

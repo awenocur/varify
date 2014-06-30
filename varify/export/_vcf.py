@@ -13,7 +13,7 @@ from cStringIO import StringIO
 from socket import gethostname
 from django.db.models import Q
 from avocado.export._base import BaseExporter
-from varify.samples.models import Result
+from varify.samples.models import Result, Project, Sample
 
 log = logging.getLogger(__name__)
 
@@ -53,6 +53,9 @@ class VcfExporter(BaseExporter):
         beginning_bp = []
         ending_bp = []
 
+        # array to manage project permissions from command-line utility
+        permitted_projects = None
+
         # POST should ignore the iterable by design, since it interfaces with
         # a dedicated client
         # decode the parameters passed from the client
@@ -73,6 +76,27 @@ class VcfExporter(BaseExporter):
                         chromosomes.append(str(dict["chrom"]))
                         beginning_bp.append(int(dict["start"]))
                         ending_bp.append(int(dict["end"]))
+
+                permitted_projects = []
+
+                # results may be limited to a list of projects; required for
+                # queries that span multiple projects
+                if 'projects' in data:
+                    permitted_project_labels = str(data["projects"])
+                    get_permitted_projects = \
+                        Project.objects.\
+                        filter(label__in=permitted_project_labels)
+                    for permitted_project in get_permitted_projects:
+                        permitted_projects.append(permitted_project.id)
+                else:
+                    get_permitted_project_samples = \
+                        Sample.objects. \
+                        filter(label__in=labels).distinct('project')
+                    for sample in get_permitted_project_samples:
+                        permitted_projects.append(sample.project.id)
+                    # no projects were specified on the command line, so there
+                    # should be only one permitted
+                    assert len(permitted_projects) <= 1
 
         # The following is an ORM-based implementation that works for now;
         # this should be migrated to use Avocado if possible
@@ -127,6 +151,12 @@ class VcfExporter(BaseExporter):
             range_criteria).order_by(
             'variant__chr__order', 'variant__pos')
 
+        # ensure results are from a particular project
+        if permitted_projects:
+            selected_results = \
+                selected_results.\
+                filter(sample__project__id__in=permitted_projects)
+
         # dict of rows in the VCF file; this is used to look up rows that
         # were already created, to aggregate samples by variant;
         # each row represents one variant
@@ -161,7 +191,7 @@ class VcfExporter(BaseExporter):
             # PyVCF uses ASCII, sorry; here's where we check whether we're
             # already handling a particular sample; if we're not, assign
             # it an index
-            if sample.label.encode('ascii', errors='backslashreplace')\
+            if sample.label.encode('ascii', errors='backslashreplace') \
                     not in sample_indexes:
                 sample_indexes[
                     sample.label.encode(
@@ -220,7 +250,7 @@ class VcfExporter(BaseExporter):
         i = 0
         if labels:
             for label in labels:
-                if(label in sample_indexes):
+                if (label in sample_indexes):
                     sample_indexes[label] = i
                     i += 1
 

@@ -103,6 +103,12 @@ git clone https://github.com/cbmi/varify.git
 cd varify
 ```
 
+Under Mac OS X 10.8 or later, with XCode 5.1 or later, the following may be necessary in order for pip to install requirements:
+
+```bash
+export CFLAGS=-Qunused-arguments
+```
+
 Install the requirements:
 
 ```bash

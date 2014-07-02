@@ -103,16 +103,16 @@ git clone https://github.com/cbmi/varify.git
 cd varify
 ```
 
-Under Mac OS X 10.8 or later, with XCode 5.1 or later, the following may be necessary in order for pip to install requirements:
-
-```bash
-export CFLAGS=-Qunused-arguments
-```
-
 Install the requirements:
 
 ```bash
 pip install -r requirements.txt
+```
+
+Under Mac OS X 10.8 or later, with XCode 5.1 or later, the following may be necessary in order for pip to install requirements:
+
+```bash
+export CFLAGS=-Qunused-arguments
 ```
 
 [Start the postgres server](http://www.postgresql.org/docs/9.2/static/server-start.html). This *may* look something like:

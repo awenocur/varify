@@ -25,8 +25,8 @@ class SampleLoadTestCase(QueueTestCase):
     def test_pipeline(self):
 
         # Immediately validates and creates a sample
-        management.call_command('samples', 'queue')
         from django.core import management
+        management.call_command('samples', 'queue')
 
         # Synchronously work on queue
         worker1 = get_worker('variants')

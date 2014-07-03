@@ -298,6 +298,5 @@ class VcfExporter(BaseExporter):
             next_row.samples = reordered_samples
 
             writer.write_record(next_row)
-            writer.close()
 
         return buff

@@ -40,9 +40,14 @@ class SampleLoadTestCase(QueueTestCase):
                        'samples': ['NA12891', 'NA12892', 'NA12878']}
 
         json = dumps(test_params)
-        request = http.Request()
+        # create a nonsensical request just so that the exporter can function
+        request = http.HttpRequest()
         request._stream = StringIO(json)
+        request.META['SERVER_NAME'] = 'test'
+        request.META['SERVER_PORT'] = 0
+        request.method = 'POST'
         exporter = VcfExporter()
         buff = exporter.write(None, request = request)
-        hash = hashlib.md5(buff.content)
-        self.assertequal(hash.hexdigest(), '97419d94bcd14a87b83185f065511f10')
+        hash = hashlib.md5(buff.getvalue()[-500:])
+        buff.close()
+        self.assertEqual(hash.hexdigest(), '990fe158f2e2390a8c3bd0d673ed40d1')

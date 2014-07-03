@@ -26,6 +26,8 @@ else:
 # VCF entries loaded into the db, but to use VCF as a common format that
 # integrates into a bioinformatics workflow.  This exporter works with a client
 # currently hosted at http://github.com/awenocur/varify_client.
+
+
 class VcfExporter(BaseExporter):
     short_name = 'VCF'
     long_name = 'Variant Call Format'

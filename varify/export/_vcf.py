@@ -1,14 +1,9 @@
-# VCF exporter
-# The primary purpose of this exporter is not to generate verbatim copies of
-# VCF entries loaded into the db, but to use VCF as a common format that
-# integrates into a bioinformatics workflow.  This exporter works with a client
-# currently hosted at http://github.research.chop.edu/wenocur/varify_client
-
 import time
 import json
 import textwrap
 import logging
 import vcf
+from sys import version_info
 from cStringIO import StringIO
 from socket import gethostname
 from django.db.models import Q
@@ -17,7 +12,20 @@ from varify.samples.models import Result, Project, Sample
 
 log = logging.getLogger(__name__)
 
+# The following generates a varg list for Python 2.7, that triggers an
+# exception in the Python 2.6 standard library.
+sys_major_version = version_info[0]
+sys_minor_version = version_info[1]
+if(sys_major_version < 3 and sys_minor_version < 7):
+    unicode_conv_vargs = {}
+else:
+    unicode_conv_vargs = {'errors': 'backslashreplace'}
 
+# VCF exporter
+# The primary purpose of this exporter is not to generate verbatim copies of
+# VCF entries loaded into the db, but to use VCF as a common format that
+# integrates into a bioinformatics workflow.  This exporter works with a client
+# currently hosted at http://github.com/awenocur/varify_client.
 class VcfExporter(BaseExporter):
     short_name = 'VCF'
     long_name = 'Variant Call Format'
@@ -27,13 +35,14 @@ class VcfExporter(BaseExporter):
 
     def write(self, iterable, buff=None, request=None, *args, **kwargs):
 
-        # figure out what we call this data source:
+        # Figure out what we call this data source:
         vcf_source = gethostname()
         if request:
             vcf_source = request.get_host()
 
-        # descriptions of the fields currently supported by the exporter;
-        # this is to be prepended to the actual header, describing lines
+        # These are descriptions of the fields currently supported by the
+        # exporter.
+        # This is to be prepended to the actual header, describing lines.
         vcf_file_header = textwrap.dedent('''\
             ##fileformat=VCFv4.1
             ##fileDate= ''' + time.strftime("%Y%m%d") + '''
@@ -191,11 +200,11 @@ class VcfExporter(BaseExporter):
             # PyVCF uses ASCII, sorry; here's where we check whether we're
             # already handling a particular sample; if we're not, assign
             # it an index
-            if sample.label.encode('ascii', errors='backslashreplace') \
+            if sample.label.encode('ascii', **unicode_conv_vargs) \
                     not in sample_indexes:
                 sample_indexes[
                     sample.label.encode(
-                        'ascii', errors='backslashreplace')] = sample_num
+                        'ascii', **unicode_conv_vargs)] = sample_num
                 sample_num += 1
             variant = result.variant
             # here's where we check whether we're already handling a
@@ -205,7 +214,7 @@ class VcfExporter(BaseExporter):
             else:
                 rsid = variant.rsid
                 if rsid:
-                    rsid = rsid.encode('ascii', errors='backslashreplace')
+                    rsid = rsid.encode('ascii', **unicode_conv_vargs)
                 # we haven't seen this variant before, create a new record
                 next_row = vcf.model._Record(
                     ID=rsid,
@@ -237,7 +246,7 @@ class VcfExporter(BaseExporter):
                 ref_coverage, alt_coverage)
             # generate call values array for PyVCF
             next_row_call_values = [result.genotype.value.encode(
-                'ascii', errors='backslashreplace'),
+                'ascii', **unicode_conv_vargs),
                 next_row_call_allelicDepth,
                 result.read_depth,
                 result.genotype_quality]

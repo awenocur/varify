@@ -36,8 +36,7 @@ class VcfExporter(BaseExporter):
     content_type = 'text/variant-call-format'
 
     def write(self, iterable, buff=None, request=None, *args, **kwargs):
-
-        # Figure out what we call this data source:
+        # Figure out what we call this data source.
         vcf_source = gethostname()
         if request:
             vcf_source = request.get_host()
@@ -55,72 +54,78 @@ class VcfExporter(BaseExporter):
             ##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Approximate read depth (reads with MQ=255 or with bad mates are filtered)">
             ##FORMAT=<ID=GQ,Number=1,Type=Float,Description="Genotype Quality">
             #CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT''')  # noqa
+
         buff = self.get_file_obj(buff)
 
-        # this shall contain sample labels if POST data are detected
+        # This shall contain sample labels if POST data are detected.
         labels = None
-        # these shall contain ranges if POST data are detected
+        # These shall contain ranges if POST data are detected.
         chromosomes = []
         beginning_bp = []
         ending_bp = []
 
-        # array to manage project permissions from command-line utility
+        # This is an array to manage project permissions from the command line
+        # utility.
         permitted_projects = None
 
         # POST should ignore the iterable by design, since it interfaces with
-        # a dedicated client
-        # decode the parameters passed from the client
-        if request:
-            if request.method == 'POST':
-                data = json.load(request._stream)
-                # get the list of sample labels
-                labels = data['samples']
-                # dictionaries encoded by the client to store chromosome ranges
-                range_dicts = None
+        # a dedicated client.
+        # Decode the parameters passed from the client.
+        if request and request.method == 'POST':
+            data = json.load(request._stream)
+            # Get the list of sample labels.
+            labels = data['samples']
+            # These are dictionaries encoded by the client to store chromosome
+            # ranges.
+            range_dicts = None
 
-                # chromosome ranges are optional
-                if 'ranges' in data:
-                    range_dicts = data['ranges']
-                # TODO: catch invalid/missing entries in the following dicts:
-                if range_dicts:
-                    for dict in range_dicts:
-                        chromosomes.append(str(dict["chrom"]))
-                        beginning_bp.append(int(dict["start"]))
-                        ending_bp.append(int(dict["end"]))
+            # Chromosome ranges are optional.
+            if 'ranges' in data:
+                range_dicts = data['ranges']
+            if range_dicts:
+                for dict in range_dicts:
+                    if "chrom" in dict and "start" in dict and "end" in dict:
+                        range_chrom = str(dict["chrom"])
+                        range_start = int(dict["start"])
+                        range_end = int(dict["end"])
+                        if(range_end >= range_start):
+                            chromosomes.append(range_chrom)
+                            beginning_bp.append(range_start)
+                            ending_bp.append(range_end)
 
-                permitted_projects = []
+            permitted_projects = []
 
-                # results may be limited to a list of projects; required for
-                # queries that span multiple projects
-                if 'projects' in data:
-                    permitted_project_labels = str(data["projects"])
-                    get_permitted_projects = \
-                        Project.objects.\
-                        filter(label__in=permitted_project_labels)
-                    for permitted_project in get_permitted_projects:
-                        permitted_projects.append(permitted_project.id)
-                else:
-                    get_permitted_project_samples = \
-                        Sample.objects. \
-                        filter(label__in=labels).distinct('project')
-                    for sample in get_permitted_project_samples:
-                        permitted_projects.append(sample.project.id)
-                    # no projects were specified on the command line, so there
-                    # should be only one permitted
-                    assert len(permitted_projects) <= 1
+            # Results may be limited to a list of projects; this is required
+            # for queries that span multiple projects.
+            if 'projects' in data:
+                permitted_project_labels = str(data["projects"])
+                get_permitted_projects = \
+                    Project.objects.\
+                    filter(label__in=permitted_project_labels)
+                for permitted_project in get_permitted_projects:
+                    permitted_projects.append(permitted_project.id)
+            else:
+                get_permitted_project_samples = \
+                    Sample.objects. \
+                    filter(label__in=labels).distinct('project')
+                for sample in get_permitted_project_samples:
+                    permitted_projects.append(sample.project.id)
+                # No projects were specified on the command line, so there
+                # should be only one permitted.
+                assert len(permitted_projects) <= 1
 
         # The following is an ORM-based implementation that works for now;
-        # this should be migrated to use Avocado if possible
-        # start with a QuerySet for all results
+        # this should be migrated to use Avocado if possible.
+        # Start with a QuerySet for all results.
         all_results = Result.objects.get_query_set()
-        # these shall be Q objects
+        # These shall be Q objects.
         label_criteria = None
         range_criteria = None
 
-        # labels are specified by the client; the iterable is not used
+        # Labels are specified by the client; the iterable is not used.
         if labels is not None:
-            # take the union of all sets matching sample labels in the labels
-            # array; store the predicate as a Q object
+            # Take the union of all sets matching sample labels in the labels
+            # array; store the predicate as a Q object.
             for next_label in labels:
                 next_criterion = Q(sample__label=next_label)
                 if label_criteria is None:
@@ -128,8 +133,8 @@ class VcfExporter(BaseExporter):
                 else:
                     label_criteria |= next_criterion
 
-            # take the union of all sets matching ranges in the 3 corresponding
-            # arrays; store the predicate as a Q object
+            # Take the union of all sets matching ranges in the 3 corresponding
+            # arrays; store the predicate as a Q object.
             for chr, start, end in zip(chromosomes, beginning_bp, ending_bp):
                 next_criterion = Q(variant__chr__label=chr) & Q(
                     variant__pos__lt=end + 1) & Q(
@@ -138,7 +143,8 @@ class VcfExporter(BaseExporter):
                     range_criteria = next_criterion
                 else:
                     range_criteria |= next_criterion
-        else:  # the iterable is being used
+
+        else:  # The iterable is being used.
             result_ids = []
             for row in iterable:
                 result_ids.append(row[0])
@@ -147,14 +153,14 @@ class VcfExporter(BaseExporter):
             # convenience.
             label_criteria = Q(id__in=result_ids)
 
-        # if no ranges were provided, or the iterator is being used,
-        # use a dummy Q object
+        # If no ranges were provided, or the iterator is being used,
+        # use a dummy Q object.
         if range_criteria is None:
             range_criteria = Q()
 
-        # grab the results, finally; take the intersection of the two Q
+        # Grab the results, finally; take the intersection of the two Q
         # objects defined above, sort by the order defined in the VCF v4
-        # specification
+        # specification.
         selected_results = all_results.prefetch_related(
             'sample', 'variant').prefetch_related(
             'variant__chr').filter(
@@ -162,42 +168,42 @@ class VcfExporter(BaseExporter):
             range_criteria).order_by(
             'variant__chr__order', 'variant__pos')
 
-        # ensure results are from a particular project
+        # Ensure results are from a particular project.
         if permitted_projects:
             selected_results = \
                 selected_results.\
                 filter(sample__project__id__in=permitted_projects)
 
-        # dict of rows in the VCF file; this is used to look up rows that
-        # were already created, to aggregate samples by variant;
-        # each row represents one variant
+        # This dict of rows in the VCF file is used to look up rows (_Record
+        # objects) that were already created, to aggregate samples by variant;
+        # each row represents one variant.
         rows = {}
 
-        # VCF rows in the proper order, defined by the DBMS sorting by
-        # variant positon
+        # This is an array of VCF rows in the proper order, defined by the DBMS
+        # sorting by variant positon.
         ordered_rows = []
 
-        # this is something pyVCF needs to know how the call is formatted;
-        # each sample listed in a row has sub-columns in this order
-        # pyVCF requires this info to be declared again a different way
+        # This is something pyVCF needs to know how the call is formatted;
+        # each sample listed in a row has sub-columns in this order.
+        # pyVCF requires this info to be declared again a different way.
         row_call_format = vcf.model.make_calldata_tuple(['GT',
                                                          'AD',
                                                          'DP',
                                                          'GQ'])
-        # data types for the fields declared on the prior line
+        # These are data types for the fields declared on the prior line.
         row_call_format._types.append('String')
         row_call_format._types.append('String')
         row_call_format._types.append('Integer')
         row_call_format._types.append('Integer')
-        # lookup dict for sample indexes; this is linked to each PyVCF
-        # Record object
+        # This is a lookup dict for sample indexes; this is linked to each
+        # PyVCF Record object.
         sample_indexes = {}
-        # keep track of the number of samples detected
+        # Keep track of the number of samples detected.
         sample_num = 0
-        # loop over all Results returned
+        # Loop over all Results returned.
         for result in selected_results:
-            # this sample may or may not be the first for a particular
-            # variant
+            # This sample may or may not be the first for a particular
+            # variant.
             sample = result.sample
             # PyVCF uses ASCII, sorry; here's where we check whether we're
             # already handling a particular sample; if we're not, assign

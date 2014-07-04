@@ -244,7 +244,7 @@ class VcfExporter(BaseExporter):
             if result.coverage_alt:
                 alt_coverage = result.coverage_alt
             # populate the allelic depth field for a particular call
-            next_row_call_allelicDepth = '{:d},{:d}'.format(
+            next_row_call_allelicDepth = '{0:d},{1:d}'.format(
                 ref_coverage, alt_coverage)
             # generate call values array for PyVCF
             next_row_call_values = [result.genotype.value.encode(

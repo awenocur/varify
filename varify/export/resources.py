@@ -4,6 +4,8 @@ from avocado.models import DataView
 
 
 class VcfExporterResource(ExporterResource):
+    supported_accept_types = ('*/*',)
+    supported_content_types = ('application/json',)
 
     def get_view(self, request, attrs=None):
         # Just return the variant ID, we will do the lookup ourselves. It's
@@ -29,6 +31,4 @@ class VcfExporterResource(ExporterResource):
     def dispatch(self, *args, **kwargs):
         return super(VcfExporterResource, self).dispatch(*args, **kwargs)
 
-    supported_accept_types = ('*/*',)
-    supported_content_types = ('application/json',)
     attrs = ''

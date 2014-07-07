@@ -34,6 +34,10 @@ urlpatterns = patterns(
 
     url(r'^api/data/export/vcf/$', VcfExporterResource(), name='vcf'),
 
+    # Required for opening a variant set
+    url(r'^variant-sets/', TemplateView.as_view(template_name='index.html'),
+        name='variant-set'),
+
     # Serrano provides the REST API
     url(r'^api/', include('serrano.urls')),
 

@@ -161,7 +161,7 @@ class VcfExporter(BaseExporter):
         if range_criteria is None:
             range_criteria = Q()
 
-        label_and_range_criteria = label_criteria and range_criteria
+        label_and_range_criteria = label_criteria & range_criteria
 
         # Grab the results, finally; take the intersection of the two Q
         # objects defined above, sort by the order defined in the VCF v4

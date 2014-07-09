@@ -288,7 +288,7 @@ class VcfExporter(BaseExporter):
                     sample_indexes[label] = i
                     i += 1
 
-        # prepare string for sample headers
+        # Prepare a string for the sample headers.
         just_sample_indexes = sample_indexes.values()
         just_sample_names = sample_indexes.keys()
         sorted_sample_names = zip(*sorted(zip(just_sample_indexes,

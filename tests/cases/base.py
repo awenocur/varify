@@ -10,7 +10,6 @@ class AuthenticatedBaseTestCase(TestCase):
         super(AuthenticatedBaseTestCase, self).setUp()
         self.user = User.objects.create_user(username='test', password='test')
         self.client.login(username='test', password='test')
-        print "I'm here!"
 
 class QueueTestCase(TransactionTestCase):
     def setUp(self):

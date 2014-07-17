@@ -1,10 +1,9 @@
 import os
 import hashlib
-from StringIO import StringIO
 from json import dumps
-from django import http
 from django.test.utils import override_settings
 from django_rq import get_worker
+from avocado.models import DataContext
 from varify.export._vcf import VcfExporter
 from ..base import AuthenticatedQueueTestCase
 
@@ -13,18 +12,6 @@ SAMPLE_DIRS = [os.path.join(TESTS_DIR, 'samples')]
 
 @override_settings(VARIFY_SAMPLE_DIRS=SAMPLE_DIRS)
 class VcfExportTestCase(AuthenticatedQueueTestCase):
-    @staticmethod
-    def prepare_request(params):
-        json = dumps(params)
-
-        # Create a nonsensical request, just so that the exporter can function.
-        request = http.HttpRequest()
-        request._stream = StringIO(json)
-        request.META['SERVER_NAME'] = 'test'
-        request.META['SERVER_PORT'] = 0
-        request.method = 'POST'
-        return request
-
     def test_pipeline(self):
         # Immediately validates and creates a sample
         from django.core import management
@@ -64,3 +51,28 @@ class VcfExportTestCase(AuthenticatedQueueTestCase):
         hash = hashlib.md5(response.content[-500:])
 
         self.assertEqual(hash.hexdigest(), '50dd077b5c8f55366f625e44beebf203')
+
+        # This third test runs the exporter using results provided by Serrano.
+        test_params = {'type': 'and',
+                       'children':
+                           [{'concept': 2,
+                             'language':
+                                 'Sample is either NA12878, NA12891 or NA12892',
+                             'required': True,
+                             'value':
+                                 [{'value': 15,
+                                   'label': 'NA12878'},
+                                  {'value': 13, 'label': 'NA12891'},
+                                  {'value': 14, 'label': 'NA12892'}],
+                             'field': 111, 'operator': 'in'},
+                            {'operator': 'in', 'field': 64,
+                             'concept': 1, 'value': [1], 'language':
+                                'Chromosome is 1'},
+                            {'concept': 1,
+                             'language':
+                                 'Position is between 100000000.0 and 153500000.0',
+                             'required': False,
+                             'value': [100000000, 153500000],
+                             'field': 69, 'operator': 'range'}]}
+        cxt = DataContext(template=True, default=True, json=dumps(test_params))
+        cxt.save()

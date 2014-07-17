@@ -6,13 +6,13 @@ from django import http
 from django.test.utils import override_settings
 from django_rq import get_worker
 from varify.export._vcf import VcfExporter
-from ..base import QueueTestCase
+from ..base import AuthenticatedQueueTestCase
 
 TESTS_DIR = os.path.join(os.path.dirname(__file__), '../..')
 SAMPLE_DIRS = [os.path.join(TESTS_DIR, 'samples')]
 
 @override_settings(VARIFY_SAMPLE_DIRS=SAMPLE_DIRS)
-class SampleLoadTestCase(QueueTestCase):
+class VcfExportTestCase(AuthenticatedQueueTestCase):
     @staticmethod
     def prepare_request(params):
         json = dumps(params)
@@ -43,10 +43,12 @@ class SampleLoadTestCase(QueueTestCase):
         # This first test is for 3 samples, with a range on one chromosome.
         test_params = {'ranges': [{'start': 1, 'end': 144000000, 'chrom': 1}],
                        'samples': ['NA12891', 'NA12892', 'NA12878']}
-        request = SampleLoadTestCase.prepare_request(test_params)
-        buff = exporter.write(None, request = request)
-        hash = hashlib.md5(buff.getvalue()[-500:])
-        buff.close()
+        response = self.client.post('/api/data/export/vcf/',
+                                    data=dumps(test_params),
+                                    content_type='application/json')
+        self.assertTrue(response.get('Content-Disposition').startswith(
+            'attachment; filename="all'))
+        hash = hashlib.md5(response.content[-500:])
 
         self.assertEqual(hash.hexdigest(), '990fe158f2e2390a8c3bd0d673ed40d1')
 
@@ -54,9 +56,11 @@ class SampleLoadTestCase(QueueTestCase):
         # is indeed being excluded.
         test_params = {'ranges': [{'start': 1, 'end': 144000000, 'chrom': 1}],
                        'samples': ['NA12891', 'NA12892']}
-        request = SampleLoadTestCase.prepare_request(test_params)
-        buff = exporter.write(None, request = request)
-        hash = hashlib.md5(buff.getvalue()[-500:])
-        buff.close()
+        response = self.client.post('/api/data/export/vcf/',
+                                    data=dumps(test_params),
+                                    content_type='application/json')
+        self.assertTrue(response.get('Content-Disposition').startswith(
+            'attachment; filename="all'))
+        hash = hashlib.md5(response.content[-500:])
 
         self.assertEqual(hash.hexdigest(), '50dd077b5c8f55366f625e44beebf203')

@@ -12,6 +12,8 @@ SAMPLE_DIRS = [os.path.join(TESTS_DIR, 'samples')]
 
 @override_settings(VARIFY_SAMPLE_DIRS=SAMPLE_DIRS)
 class VcfExportTestCase(AuthenticatedQueueTestCase):
+    fixtures = ['test_avocado_metadata.json']
+
     def test_pipeline(self):
         # Immediately validates and creates a sample
         from django.core import management
@@ -56,23 +58,24 @@ class VcfExportTestCase(AuthenticatedQueueTestCase):
         test_params = {'type': 'and',
                        'children':
                            [{'concept': 2,
-                             'language':
-                                 'Sample is either NA12878, NA12891 or NA12892',
                              'required': True,
                              'value':
-                                 [{'value': 15,
+                                 [{'value': 3,
                                    'label': 'NA12878'},
-                                  {'value': 13, 'label': 'NA12891'},
-                                  {'value': 14, 'label': 'NA12892'}],
+                                  {'value': 1, 'label': 'NA12891'},
+                                  {'value': 2, 'label': 'NA12892'}],
                              'field': 111, 'operator': 'in'},
                             {'operator': 'in', 'field': 64,
-                             'concept': 1, 'value': [1], 'language':
-                                'Chromosome is 1'},
+                             'concept': 1, 'value': [1]},
                             {'concept': 1,
-                             'language':
-                                 'Position is between 100000000.0 and 153500000.0',
                              'required': False,
                              'value': [100000000, 153500000],
                              'field': 69, 'operator': 'range'}]}
         cxt = DataContext(template=True, default=True, json=dumps(test_params))
         cxt.save()
+        response = self.client.get('/api/data/export/vcf/')
+        self.assertTrue(response.get('Content-Disposition').startswith(
+            'attachment; filename="all'))
+        hash = hashlib.md5(response.content[-500:])
+
+        self.assertEqual(hash.hexdigest(), 'bb185c7ef48c1b32bc26d2962a2876b3')

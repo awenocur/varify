@@ -7,7 +7,6 @@ from django.test import TestCase, TransactionTestCase
 
 class AuthenticatedBaseTestCase(TestCase):
     def setUp(self):
-        super(AuthenticatedBaseTestCase, self).setUp()
         self.user = User.objects.create_user(username='test', password='test')
         self.client.login(username='test', password='test')
 
@@ -17,7 +16,9 @@ class QueueTestCase(TransactionTestCase):
         get_queue('variants').empty()
         get_queue('default').empty()
         get_failed_queue(get_connection()).empty()
-        super(QueueTestCase, self).setUp()
 
-class AuthenticatedQueueTestCase(AuthenticatedBaseTestCase, QueueTestCase):
-    pass
+class AuthenticatedQueueTestCase(QueueTestCase):
+    def setUp(self):
+        super(AuthenticatedQueueTestCase, self).setUp()
+        self.user = User.objects.create_user(username='test', password='test')
+        self.client.login(username='test', password='test')

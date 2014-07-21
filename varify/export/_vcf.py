@@ -9,7 +9,6 @@ from socket import gethostname
 from django.db.models import Q
 from avocado.export._base import BaseExporter
 from varify.samples.models import Result, Project, Sample
-import ipdb
 
 log = logging.getLogger(__name__)
 
@@ -148,7 +147,6 @@ class VcfExporter(BaseExporter):
                     range_criteria |= next_criterion
 
         else:  # The iterable is being used.
-            ipdb.set_trace()
             result_ids = []
             for row in iterable:
                 result_ids.append(row[0])

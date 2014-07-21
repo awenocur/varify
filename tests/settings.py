@@ -13,6 +13,8 @@ INSTALLED_APPS = (
     'tests.cases.geneset_form',
     'tests.cases.sample_load_process',
     'tests.cases.commands',
+    'tests.cases.dummy1',
+    'tests.cases.dummy2',
 
     'varify',
 

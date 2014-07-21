@@ -1,5 +1,6 @@
 import os
 from django.core.cache import cache
+from django.core import management
 from django.test import TestCase
 from django_rq import get_queue, get_connection
 from rq.queue import get_failed_queue
@@ -21,6 +22,7 @@ class dummyTestCase1(TestCase):
     def test_dummy(self):
         worker1 = get_worker('variants')
         worker2 = get_worker('default')
+        management.call_command('samples', 'queue')
 
         worker1.work(burst=True)
         worker2.work(burst=True)

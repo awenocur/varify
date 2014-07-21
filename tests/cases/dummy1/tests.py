@@ -2,6 +2,7 @@ import os
 from django.core.cache import cache
 from django.core import management
 from django.test import TestCase
+from django.contrib.auth.models import User
 from django_rq import get_queue, get_connection
 from rq.queue import get_failed_queue
 from django.test.utils import override_settings
@@ -18,6 +19,7 @@ class dummyTestCase1(TestCase):
         get_queue('variants').empty()
         get_queue('default').empty()
         get_failed_queue(get_connection()).empty()
+        self.user = User.objects.create_user(username='test', password='test')
 
     def test_dummy(self):
         worker1 = get_worker('variants')

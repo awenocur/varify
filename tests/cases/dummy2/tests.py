@@ -12,16 +12,19 @@ TESTS_DIR = os.path.join(os.path.dirname(__file__), '../..')
 SAMPLE_DIRS = [os.path.join(TESTS_DIR, 'samples')]
 
 @override_settings(VARIFY_SAMPLE_DIRS=SAMPLE_DIRS)
-class dummyTestCase1(TestCase):
+class dummyTestCase2(TestCase):
 
     def setUp(self):
+        print "dummy2 begin setUp"
         cache.clear()
         get_queue('variants').empty()
         get_queue('default').empty()
         get_failed_queue(get_connection()).empty()
         self.user = User.objects.create_user(username='test', password='test')
+        print "dummy2 end setUp"
 
     def test_dummy(self):
+        print "dummy2 begin test"
         worker1 = get_worker('variants')
         worker2 = get_worker('default')
         management.call_command('samples', 'queue')
@@ -30,3 +33,9 @@ class dummyTestCase1(TestCase):
         worker2.work(burst=True)
 
         self.assertTrue(True, "This should be true!")
+        print "dummy2 end test"
+
+    def tearDown(self):
+        print "dummy2 begin tearDown"
+        super(self, dummyTestCase2).tearDown()
+        print "dummy2 end tearDown"

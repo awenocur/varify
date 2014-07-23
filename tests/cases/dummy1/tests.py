@@ -37,5 +37,5 @@ class dummyTestCase1(TestCase):
 
     def tearDown(self):
         print "dummy1 begin tearDown"
-        super(self, dummyTestCase1).tearDown()
+        super(dummyTestCase1, self).tearDown()
         print "dummy1 end tearDown"

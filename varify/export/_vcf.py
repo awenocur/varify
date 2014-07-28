@@ -9,6 +9,7 @@ from socket import gethostname
 from django.db.models import Q
 from avocado.export._base import BaseExporter
 from varify.samples.models import Result, Project, Sample
+from varify.variants.models import VariantEffect
 
 log = logging.getLogger(__name__)
 
@@ -19,6 +20,13 @@ if version_info < (2, 7):
 else:
     unicode_conv_vargs = {'errors': 'backslashreplace'}
 
+def _grab_effects_string(variant):
+    lines = []
+    allEffects = variant.effects
+    for effect in allEffects:
+        nextLine = effect.effect.label
+        nextLine +=
+        lines.append(nextLine)
 
 class VcfExporter(BaseExporter):
     # VCF exporter
@@ -51,6 +59,7 @@ class VcfExporter(BaseExporter):
             ##FORMAT=<ID=AD,Number=.,Type=Integer,Description="Allelic depths for the ref and alt alleles in the order listed">
             ##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Approximate read depth (reads with MQ=255 or with bad mates are filtered)">
             ##FORMAT=<ID=GQ,Number=1,Type=Float,Description="Genotype Quality">
+            ##INFO=<ID=EFF,Number=.,Type=String,Description="Predicted effects for this variant.Format: 'Effect (Effect_Impact)' ">
             #CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT''')  # noqa
 
         buff = self.get_file_obj(buff)

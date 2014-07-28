@@ -30,7 +30,10 @@ def _grab_effects_string(variant):
         nextLine += effect.effect.impact.label
         nextLine += ")"
         lines.append(nextLine)
-    return string.join(lines, ",")
+    if(len(allEffects) > 0):
+        return string.join(lines, ",")
+    else:
+        return None
 
 class VcfExporter(BaseExporter):
     # VCF exporter

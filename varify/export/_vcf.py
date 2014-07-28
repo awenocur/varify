@@ -1,4 +1,5 @@
 import time
+import string
 import json
 import textwrap
 import logging
@@ -22,11 +23,14 @@ else:
 
 def _grab_effects_string(variant):
     lines = []
-    allEffects = variant.effects
+    allEffects = variant.effects.all()
     for effect in allEffects:
         nextLine = effect.effect.label
-        nextLine +=
+        nextLine += " ("
+        nextLine += effect.effect.impact.label
+        nextLine += ")"
         lines.append(nextLine)
+    return string.join(lines, ",")
 
 class VcfExporter(BaseExporter):
     # VCF exporter
@@ -253,7 +257,7 @@ class VcfExporter(BaseExporter):
                     FILTER=None,
                     # here's where the call format is specified
                     # a second time, as required by PyVCF
-                    INFO=None, FORMAT='GT:AD:DP:GQ',
+                    INFO={'EFF':_grab_effects_string(variant)}, FORMAT='GT:AD:DP:GQ',
                     sample_indexes=sample_indexes,
                     samples=[])
 
@@ -278,8 +282,11 @@ class VcfExporter(BaseExporter):
                 ref_coverage, alt_coverage)
 
             # Generate the call values array for PyVCF.
-            next_row_call_values = [result.genotype.value.encode(
-                'ascii', **unicode_conv_vargs),
+            result_genotype_string = None
+            if(result.genotype):
+                result_genotype_string = result.genotype.value.encode(
+                    'ascii', **unicode_conv_vargs)
+            next_row_call_values = [result_genotype_string,
                 next_row_call_allelicDepth,
                 result.read_depth,
                 result.genotype_quality]

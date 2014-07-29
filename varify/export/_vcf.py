@@ -28,6 +28,9 @@ def _grab_effects_string(variant):
         nextLine = effect.effect.label
         nextLine += " ("
         nextLine += effect.effect.impact.label
+        nextLine += "|" + (effect.functional_class.label if
+                           effect.functional_class else '.')
+        nextLine += "|" + (effect.codon_change or '.')
         nextLine += ")"
         lines.append(nextLine)
     if(len(allEffects) > 0):

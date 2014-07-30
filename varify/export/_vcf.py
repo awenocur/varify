@@ -25,7 +25,7 @@ def _grab_effects_string(variant):
     lines = []
     allEffects = variant.effects.all()
     for effect in allEffects:
-        nextLine = effect.effect.label
+        nextLine = effect.effect.value
         nextLine += " ("
         nextLine += effect.effect.impact.label
         nextLine += "|" + (effect.functional_class.label if
@@ -69,7 +69,7 @@ class VcfExporter(BaseExporter):
             ##FORMAT=<ID=AD,Number=.,Type=Integer,Description="Allelic depths for the ref and alt alleles in the order listed">
             ##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Approximate read depth (reads with MQ=255 or with bad mates are filtered)">
             ##FORMAT=<ID=GQ,Number=1,Type=Float,Description="Genotype Quality">
-            ##INFO=<ID=EFF,Number=.,Type=String,Description="Predicted effects for this variant.Format: 'Effect (Effect_Impact)' ">
+            ##INFO=<ID=EFF,Number=.,Type=String,Description="Predicted effects for this variant.Format: 'Effect (Effect_Impact | Functional_Class | Codon_Change)' ">
             #CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT''')  # noqa
 
         buff = self.get_file_obj(buff)

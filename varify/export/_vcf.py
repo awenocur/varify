@@ -10,7 +10,6 @@ from socket import gethostname
 from django.db.models import Q
 from avocado.export._base import BaseExporter
 from varify.samples.models import Result, Project, Sample
-from varify.variants.models import VariantEffect
 
 log = logging.getLogger(__name__)
 
@@ -21,22 +20,32 @@ if version_info < (2, 7):
 else:
     unicode_conv_vargs = {'errors': 'backslashreplace'}
 
+
 def _grab_effects_string(variant):
     lines = []
     allEffects = variant.effects.all()
     for effect in allEffects:
         nextLine = effect.effect.value
-        nextLine += " ("
+        nextLine += ' ('
         nextLine += effect.effect.impact.label
-        nextLine += "|" + (effect.functional_class.label if
-                           effect.functional_class else '.')
-        nextLine += "|" + (effect.codon_change or '.')
+        nextLine += '|' + ((effect.functional_class.label or '')
+                           if effect.functional_class else '')
+        nextLine += '|' + (effect.codon_change or '')
+        nextLine += '|' + (effect.amino_acid_change or '')
+        nextLine += '|' + ((effect.gene.symbol or '')
+                           if effect.gene else '')
+        nextLine += '|' + ((effect.transcript.refseq_id or '')
+                           if effect.transcript else '')
+        nextLine += '|' + (effect.segment or '')
+        nextLine += '|' + (effect.hgvs_c or '')
+        nextLine += '|' + (effect.hgvs_p or '')
         nextLine += ")"
         lines.append(nextLine)
     if(len(allEffects) > 0):
         return string.join(lines, ",")
     else:
         return None
+
 
 class VcfExporter(BaseExporter):
     # VCF exporter
@@ -69,7 +78,7 @@ class VcfExporter(BaseExporter):
             ##FORMAT=<ID=AD,Number=.,Type=Integer,Description="Allelic depths for the ref and alt alleles in the order listed">
             ##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Approximate read depth (reads with MQ=255 or with bad mates are filtered)">
             ##FORMAT=<ID=GQ,Number=1,Type=Float,Description="Genotype Quality">
-            ##INFO=<ID=EFF,Number=.,Type=String,Description="Predicted effects for this variant.Format: 'Effect (Effect_Impact | Functional_Class | Codon_Change)' ">
+            ##INFO=<ID=EFF,Number=.,Type=String,Description="Predicted effects for this variant.Format: 'Effect (Effect_Impact | Functional_Class | Codon_Change | Amino_Acid_Change | Gene_Name | Transcript_ID | Segment | HGVS_DNA_nomenclature | HGVS_protein_nomenclature)' ">
             #CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT''')  # noqa
 
         buff = self.get_file_obj(buff)
@@ -263,7 +272,8 @@ class VcfExporter(BaseExporter):
                     FILTER=None,
                     # here's where the call format is specified
                     # a second time, as required by PyVCF
-                    INFO={'EFF':_grab_effects_string(variant)}, FORMAT='GT:AD:DP:GQ',
+                    INFO={'EFF': _grab_effects_string(variant)},
+                    FORMAT='GT:AD:DP:GQ',
                     sample_indexes=sample_indexes,
                     samples=[])
 
@@ -293,9 +303,9 @@ class VcfExporter(BaseExporter):
                 result_genotype_string = result.genotype.value.encode(
                     'ascii', **unicode_conv_vargs)
             next_row_call_values = [result_genotype_string,
-                next_row_call_allelicDepth,
-                result.read_depth,
-                result.genotype_quality]
+                                    next_row_call_allelicDepth,
+                                    result.read_depth,
+                                    result.genotype_quality]
 
             # Add the call to its corresponding PyVCF record.
             next_row.samples.append(

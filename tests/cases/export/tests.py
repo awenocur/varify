@@ -37,9 +37,9 @@ class VcfExportTestCase(AuthenticatedQueueTestCase):
                                     content_type='application/json')
         self.assertTrue(response.get('Content-Disposition').startswith(
             'attachment; filename="all'))
-        hash = hashlib.md5(response.content[-500:])
+        hash = hashlib.md5(response.content[-800:])
 
-        self.assertEqual(hash.hexdigest(), '990fe158f2e2390a8c3bd0d673ed40d1')
+        self.assertEqual(hash.hexdigest(), '50d3afcb560d03fa0868ed1d399b20d1')
 
         # This second test is for 2 samples, to check that the remaining one
         # is indeed being excluded.
@@ -50,9 +50,9 @@ class VcfExportTestCase(AuthenticatedQueueTestCase):
                                     content_type='application/json')
         self.assertTrue(response.get('Content-Disposition').startswith(
             'attachment; filename="all'))
-        hash = hashlib.md5(response.content[-500:])
+        hash = hashlib.md5(response.content[-800:])
 
-        self.assertEqual(hash.hexdigest(), '50dd077b5c8f55366f625e44beebf203')
+        self.assertEqual(hash.hexdigest(), 'eaa81aff34db3104fba4106adf428679')
 
         # This third test runs the exporter using results provided by Serrano.
         test_params = {'type': 'and',
@@ -76,6 +76,6 @@ class VcfExportTestCase(AuthenticatedQueueTestCase):
         response = self.client.get('/api/data/export/vcf/')
         self.assertTrue(response.get('Content-Disposition').startswith(
             'attachment; filename="all'))
-        hash = hashlib.md5(response.content[-500:])
+        hash = hashlib.md5(response.content[-800:])
 
         self.assertEqual(hash.hexdigest(), 'bb185c7ef48c1b32bc26d2962a2876b3')

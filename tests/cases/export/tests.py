@@ -78,4 +78,4 @@ class VcfExportTestCase(AuthenticatedQueueTestCase):
             'attachment; filename="all'))
         hash = hashlib.md5(response.content[-800:])
 
-        self.assertEqual(hash.hexdigest(), 'bb185c7ef48c1b32bc26d2962a2876b3')
+        self.assertEqual(hash.hexdigest(), '61ac69bba80a494aca7d57f8c5f4566f')

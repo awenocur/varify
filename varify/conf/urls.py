@@ -34,6 +34,9 @@ urlpatterns = patterns(
 
     url(r'^api/data/export/vcf/$', VcfExporterResource(), name='vcf'),
 
+    url(r'^sources/', include('varify.raw.sources.urls')),
+    url(r'^genes/', include('varify.genes.urls')),
+
     # Serrano provides the REST API
     url(r'^api/', include('serrano.urls')),
 

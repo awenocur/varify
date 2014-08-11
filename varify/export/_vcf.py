@@ -9,7 +9,7 @@ from cStringIO import StringIO
 from socket import gethostname
 from django.db.models import Q
 from avocado.export._base import BaseExporter
-from varify.samples.models import Result, Project, Sample
+from vdw.samples.models import Result, Project, Sample
 
 log = logging.getLogger(__name__)
 

@@ -9,27 +9,23 @@ DATABASES = {
 
 INSTALLED_APPS = (
     'tests',
+    'tests.cases.assessments',
     'tests.cases.south_tests',
     'tests.cases.geneset_form',
-    'tests.cases.sample_load_process',
     'tests.cases.export',
-    'tests.cases.commands',
+    'tests.cases.resources',
 
     'varify',
 
-    'varify.raw',
-    'varify.raw.sources',
-
-    'varify.assessments',
-    'varify.genome',
-    'varify.phenotypes',
-    'varify.genes',
-    'varify.variants',
-    'varify.samples',
-    'varify.literature',
-    'varify.pipeline',
-
-    'varify.support',
+    'vdw.assessments',
+    'vdw.genes',
+    'vdw.genome',
+    'vdw.literature',
+    'vdw.raw',
+    'vdw.raw.sources',
+    'vdw.phenotypes',
+    'vdw.samples',
+    'vdw.variants',
 
     'south',
     'guardian',
@@ -109,6 +105,11 @@ LOGGING = {
     },
     'loggers': {
         'varify': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'vdw': {
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': True,

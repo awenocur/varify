@@ -17,10 +17,6 @@ class VcfExporterResource(ExporterResource):
         return super(VcfExporterResource, self).is_not_found(
             request, response, 'vcf', **kwargs)
 
-    def get(self, request, **kwargs):
-        return super(VcfExporterResource, self).get(
-            request, 'vcf', **kwargs)
-
     def post(self, request, **kwargs):
         # TODO: remove following hack once Serrano ceases to require data attr
         # the following is a hack, to prevent Serrano from crashing
@@ -28,7 +24,7 @@ class VcfExporterResource(ExporterResource):
         return super(VcfExporterResource, self).post(
             request, 'vcf', **kwargs)
 
-    def dispatch(self, *args, **kwargs):
-        return super(VcfExporterResource, self).dispatch(*args, **kwargs)
-
-    attrs = ''
+    def get(self, request, **kwargs):
+        view = self.get_view(request)
+        context = self.get_context(request)
+        return self._export(request, 'vcf', view, context, **kwargs)

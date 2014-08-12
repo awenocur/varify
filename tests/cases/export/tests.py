@@ -1,34 +1,13 @@
-import os
 import hashlib
 from json import dumps
-from django.test.utils import override_settings
-from django_rq import get_worker
 from avocado.models import DataContext
-from varify.export._vcf import VcfExporter
-from ..base import AuthenticatedQueueTestCase
+from ..base import AuthenticatedBaseTestCase
 
-TESTS_DIR = os.path.join(os.path.dirname(__file__), '../..')
-SAMPLE_DIRS = [os.path.join(TESTS_DIR, 'samples')]
 
-@override_settings(VARIFY_SAMPLE_DIRS=SAMPLE_DIRS)
-class VcfExportTestCase(AuthenticatedQueueTestCase):
-    fixtures = ['test_avocado_metadata.json']
+class VcfExportTestCase(AuthenticatedBaseTestCase):
+    fixtures = ['test_data.json', 'test_avocado_metadata.json']
 
     def test_pipeline(self):
-        # Immediately validates and creates a sample
-        from django.core import management
-        management.call_command('samples', 'queue')
-
-        # Synchronously work on queue
-        worker1 = get_worker('variants')
-        worker2 = get_worker('default')
-
-        # Work on variants...
-        worker1.work(burst=True)
-        worker2.work(burst=True)
-
-        exporter = VcfExporter()
-
         # This first test is for 3 samples, with a range on one chromosome.
         test_params = {'ranges': [{'start': 1, 'end': 144000000, 'chrom': 1}],
                        'samples': ['NA12891', 'NA12892', 'NA12878']}
@@ -39,7 +18,7 @@ class VcfExportTestCase(AuthenticatedQueueTestCase):
             'attachment; filename="all'))
         hash = hashlib.md5(response.content[-800:])
 
-        self.assertEqual(hash.hexdigest(), '50d3afcb560d03fa0868ed1d399b20d1')
+        self.assertEqual(hash.hexdigest(), 'ef50b04eed793adbd517c7030bee1e06')
 
         # This second test is for 2 samples, to check that the remaining one
         # is indeed being excluded.
@@ -52,7 +31,7 @@ class VcfExportTestCase(AuthenticatedQueueTestCase):
             'attachment; filename="all'))
         hash = hashlib.md5(response.content[-800:])
 
-        self.assertEqual(hash.hexdigest(), 'eaa81aff34db3104fba4106adf428679')
+        self.assertEqual(hash.hexdigest(), '4789737e56186ba68dfce282849fa139')
 
         # This third test runs the exporter using results provided by Serrano.
         test_params = {'type': 'and',
@@ -78,4 +57,4 @@ class VcfExportTestCase(AuthenticatedQueueTestCase):
             'attachment; filename="all'))
         hash = hashlib.md5(response.content[-800:])
 
-        self.assertEqual(hash.hexdigest(), '61ac69bba80a494aca7d57f8c5f4566f')
+        self.assertEqual(hash.hexdigest(), '4be7626d2adbe46593282da2fd99dc29')

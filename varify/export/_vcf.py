@@ -148,6 +148,7 @@ class VcfExporter(BaseExporter):
         # this should be migrated to use Avocado if possible. Start with a
         # QuerySet for all results.
         all_results = Result.objects.get_query_set()
+
         # These shall be Q objects.
         label_criteria = None
         range_criteria = None
@@ -236,7 +237,6 @@ class VcfExporter(BaseExporter):
 
         # Loop over all Results returned.
         for result in selected_results:
-
             # This sample may or may not be the first for a particular
             # variant.
             sample = result.sample
@@ -286,12 +286,8 @@ class VcfExporter(BaseExporter):
 
             # This is a hack to replace NULLs in the DB with zero where
             # appropriate.
-            ref_coverage = 0
-            if result.coverage_ref:
-                ref_coverage = result.coverage_ref
-            alt_coverage = 0
-            if result.coverage_alt:
-                alt_coverage = result.coverage_alt
+            ref_coverage = result.coverage_ref or 0
+            alt_coverage = result.coverage_alt or 0
 
             # Populate the allelic depth field for a particular call.
             next_row_call_allelicDepth = '{0:d},{1:d}'.format(

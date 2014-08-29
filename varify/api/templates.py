@@ -346,7 +346,7 @@ SampleResult = {
 # the variant_id. This is used downstreamed to simply link together
 # data from an alternate source.
 SampleResultVariant = deepcopy(SampleResult)
-SampleResultVariant['related']['variant'] = {
+SampleResultVariant['related']['allele_1'] = {
     'fields': ['variant_id'],
     'aliases': {
         'variant_id': 'id',

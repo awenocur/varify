@@ -26,7 +26,7 @@ def _grab_effects_string(variant):
     allEffects = variant.effects.all()
     for effect in allEffects:
         nextLine = effect.effect.value
-        nextLine += ' ('
+        nextLine += '('
         nextLine += effect.effect.impact.label
         nextLine += '|' + ((effect.functional_class.label or '')
                            if effect.functional_class else '')

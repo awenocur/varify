@@ -33,7 +33,11 @@ class VcfExportTestCase(AuthenticatedBaseTestCase):
             'attachment; filename="all'))
         hash = hashlib.md5(response.content[-800:])
 
-        self.assertEqual(hash.hexdigest(), '31f5a9b3a58569d34bb339f711dcc6bd')
+        test_parser = TestParser(StringIO(response.content), self)
+        test_parser.check_samples(('NA12891',))
+        test_parser.check_num_records(33)
+        test_parser.check_info('EFF', 22, ['INTRON(Modifier||||LINC00875|NR_027469.1|intron.1|c.388-8043A>G|)', 'INTRON(Modifier||||FLJ39739|NR_027468.1|intron.1|c.258-8043A>G|)'])
+        test_parser.check_multi_field('NA12891', 22, 'GT', None, 'AD', [0,0])
 
         # This third test runs the exporter using results provided by Serrano.
         test_params = {'type': 'and',
@@ -58,7 +62,7 @@ class VcfExportTestCase(AuthenticatedBaseTestCase):
         self.assertTrue(response.get('Content-Disposition').startswith(
             'attachment; filename="all'))
 
-        testParser = TestParser(StringIO(response.content), self)
-        testParser.check_unordered_samples(('NA12878', 'NA12891',))
-        testParser.check_multi_field('EFF', 1959, ['INTRON(Modifier||||LOC100288142|NM_001278267.1|intron.99|c.10989-123920T>A|)', 'INTRON(Modifier||||NBPF10|NM_001039703.5|intron.68|c.8615-124812T>A|)'])
-        testParser.check_num_records(1963)
+        test_parser = TestParser(StringIO(response.content), self)
+        test_parser.check_unordered_samples(('NA12878', 'NA12891',))
+        test_parser.check_info('EFF', 1959, ['INTRON(Modifier||||LOC100288142|NM_001278267.1|intron.99|c.10989-123920T>A|)', 'INTRON(Modifier||||NBPF10|NM_001039703.5|intron.68|c.8615-124812T>A|)'])
+        test_parser.check_num_records(1963)

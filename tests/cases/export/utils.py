@@ -26,7 +26,7 @@ class TestParser(object):
         for other_sample in samples:
             self.test_case.assertTrue(other_sample in self.samples)
 
-    def check_field(self, field_name, record_number, value):
+    def check_info(self, field_name, record_number, value):
         record = self.records[record_number]
         my_value = record.INFO.get(field_name)
         self.test_case.assertTrue(value == my_value)
@@ -41,7 +41,7 @@ class TestParser(object):
                          compress(args, [0, 1]*(len(args)/2))):
             self.test_case.assertEqual(getattr(my_data, key), value)
 
-    def check_info(self, field_name, record_number, values):
+    def check_multi_info(self, field_name, record_number, values):
         record = self.records[record_number]
         my_values = record.INFO.get(field_name)
         for value in values:

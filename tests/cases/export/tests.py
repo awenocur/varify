@@ -12,15 +12,18 @@ class VcfExportTestCase(AuthenticatedBaseTestCase):
     def test_export(self):
         # This first test is for 3 samples, with a range on one chromosome.
         test_params = {'ranges': [{'start': 1, 'end': 144000000, 'chrom': 1}],
-                       'samples': ['NA12891', 'NA12892', 'NA12878']}
+                       'samples': ['NA12891', 'VPseq004-P-A', 'NA12878']}
         response = self.client.post('/api/data/export/vcf/',
                                     data=dumps(test_params),
                                     content_type='application/json')
         self.assertTrue(response.get('Content-Disposition').startswith(
             'attachment; filename="all'))
-        hash = hashlib.md5(response.content[-800:])
 
-        self.assertEqual(hash.hexdigest(), 'af7c5cbddae38f8340aeadb7e9b60480')
+        test_parser = TestParser(StringIO(response.content), self)
+        test_parser.check_samples(('NA12891', 'VPseq004-P-A', 'NA12878'))
+        test_parser.check_multi_info('EFF', 21, ['INTRON(Modifier||||LINC00875|NR_027469.1|intron.1|c.388-8026A>G|)', 'INTRON(Modifier||||FLJ39739|NR_027468.1|intron.1|c.258-8026A>G|)'])
+        test_parser.check_num_records(33)
+        test_parser.check_multi_field('NA12891', 22, 'AD', [0,0])
 
         # This second test is for 2 samples, to check that the remaining one
         # is indeed being excluded.
@@ -31,12 +34,11 @@ class VcfExportTestCase(AuthenticatedBaseTestCase):
                                     content_type='application/json')
         self.assertTrue(response.get('Content-Disposition').startswith(
             'attachment; filename="all'))
-        hash = hashlib.md5(response.content[-800:])
 
         test_parser = TestParser(StringIO(response.content), self)
         test_parser.check_samples(('NA12891',))
         test_parser.check_num_records(33)
-        test_parser.check_info('EFF', 22, ['INTRON(Modifier||||LINC00875|NR_027469.1|intron.1|c.388-8043A>G|)', 'INTRON(Modifier||||FLJ39739|NR_027468.1|intron.1|c.258-8043A>G|)'])
+        test_parser.check_multi_info('EFF', 22, ['INTRON(Modifier||||LINC00875|NR_027469.1|intron.1|c.388-8043A>G|)', 'INTRON(Modifier||||FLJ39739|NR_027468.1|intron.1|c.258-8043A>G|)'])
         test_parser.check_multi_field('NA12891', 22, 'GT', None, 'AD', [0,0])
 
         # This third test runs the exporter using results provided by Serrano.
@@ -64,5 +66,5 @@ class VcfExportTestCase(AuthenticatedBaseTestCase):
 
         test_parser = TestParser(StringIO(response.content), self)
         test_parser.check_unordered_samples(('NA12878', 'NA12891',))
-        test_parser.check_info('EFF', 1959, ['INTRON(Modifier||||LOC100288142|NM_001278267.1|intron.99|c.10989-123920T>A|)', 'INTRON(Modifier||||NBPF10|NM_001039703.5|intron.68|c.8615-124812T>A|)'])
+        test_parser.check_multi_info('EFF', 1959, ['INTRON(Modifier||||LOC100288142|NM_001278267.1|intron.99|c.10989-123920T>A|)', 'INTRON(Modifier||||NBPF10|NM_001039703.5|intron.68|c.8615-124812T>A|)'])
         test_parser.check_num_records(1963)

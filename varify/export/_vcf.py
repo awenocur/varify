@@ -7,7 +7,9 @@ import vcf
 from sys import version_info
 from cStringIO import StringIO
 from socket import gethostname
+from django.core.exceptions import PermissionDenied
 from django.db.models import Q
+from django.http import HttpResponse
 from avocado.export._base import BaseExporter
 from vdw.samples.models import Result, Project, Sample
 
@@ -61,6 +63,10 @@ class VcfExporter(BaseExporter):
     content_type = 'text/variant-call-format'
 
     def write(self, iterable, buff=None, request=None, *args, **kwargs):
+        # Determine whether buff is actually a response.
+        response = buff if buff and isinstance(buff, HttpResponse)\
+            else Null
+
         # Figure out what we call this data source.
         vcf_source = gethostname()
         if request:
@@ -142,7 +148,11 @@ class VcfExporter(BaseExporter):
                     permitted_projects.append(sample.project.id)
                 # No projects were specified on the command line, so there
                 # should be only one permitted.
-                assert len(permitted_projects) <= 1
+                if len(permitted_projects) > 1:
+                    if response:
+                        response.status_code = 405
+                    buff.write(json.dumps({'error': 'query spans projects'}))
+                    return buff
 
         # The following is an ORM-based implementation that works for now;
         # this should be migrated to use Avocado if possible. Start with a
@@ -355,7 +365,15 @@ class VcfExporter(BaseExporter):
                 # this should be handled in a later version of Varify
                 # rather than being thrown, and should not be added
                 # to PyVCF.
-                assert reordered_samples[index] is None
+                if reordered_samples[index]:
+                    if response:
+                        response.status_code = 405
+                        buff.write(json.dumps(
+                            {'error':
+                                'sample is present in multiple runs:' +
+                                call.sample
+                            }))
+                        return buff
                 reordered_samples[index] = call
 
             next_row.samples = reordered_samples

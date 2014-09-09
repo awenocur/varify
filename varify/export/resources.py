@@ -4,7 +4,7 @@ from avocado.models import DataView
 
 
 class VcfExporterResource(ExporterResource):
-    supported_accept_types = ('*/*',)
+    supported_accept_types = ('application/json',)
     supported_content_types = ('application/json',)
 
     def get_view(self, request, attrs=None):

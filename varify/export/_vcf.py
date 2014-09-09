@@ -7,7 +7,6 @@ import vcf
 from sys import version_info
 from cStringIO import StringIO
 from socket import gethostname
-from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 from django.http import HttpResponse
 from avocado.export._base import BaseExporter
@@ -62,13 +61,28 @@ class VcfExporter(BaseExporter):
     file_extension = 'vcf'
     content_type = 'text/variant-call-format'
 
+    def generate_vcf_for_export(self, iterable, buff=None, *args, **kwargs):
+        # Figure out what we call this data source.
+        vcf_source = gethostname()
+
+        vcf_file_header = """##fileformat=VCFv4.1
+##fileDate={0}
+##source={1}
+##reference=GRCh37
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=AD,Number=.,Type=Integer,Description="Allelic depths for the ref and alt alleles in the order listed">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Approximate read depth (reads with MQ=255 or with bad mates are filtered)">
+##FORMAT=<ID=GQ,Number=1,Type=Float,Description="Genotype Quality">
+##INFO=<ID=EFF,Number=.,Type=String,Description="Predicted effects for this variant.Format: 'Effect (Effect_Impact | Functional_Class | Codon_Change | Amino_Acid_Change | Gene_Name | Transcript_ID | Segment | HGVS_DNA_nomenclature | HGVS_protein_nomenclature)' ">
+#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT
+""".format(time.strftime('%Y%m%d'), vcf_source)
+
+
     def write(self, iterable, buff=None, request=None, *args, **kwargs):
         # Determine whether buff is actually a response.
         response = buff if buff and isinstance(buff, HttpResponse)\
-            else Null
+            else None
 
-        # Figure out what we call this data source.
-        vcf_source = gethostname()
         if request:
             vcf_source = request.get_host()
 
